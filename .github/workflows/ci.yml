@@ -64,6 +64,11 @@ jobs:
           moon run cmd/main --target js
           moon run cmd/main --target native
 
+      - name: Build JS/ESM bridge and run Node.js end-to-end smoke test
+        run: |
+          moon build js_api -d --target js --release
+          node examples/web-demo/smoke.mjs
+
       - name: Verify generated .mbti interfaces have zero drift
         run: |
           moon info
