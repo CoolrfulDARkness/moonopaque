@@ -4,7 +4,11 @@ package "CoolrfulDARkness/moonopaque/hash"
 // Values
 pub fn argon2id(Bytes, Bytes, Int32, Int32, Int32, Int32) -> Bytes
 
+pub fn argon2id_checked(Bytes, Bytes, Int32, Int32, Int32, Int32) -> Bytes?
+
 pub fn argon2id_full(Bytes, Bytes, Bytes, Bytes, Int32, Int32, Int32, Int32) -> Bytes
+
+pub fn argon2id_full_checked(Bytes, Bytes, Bytes, Bytes, Int32, Int32, Int32, Int32) -> Bytes?
 
 pub fn blake2b(Bytes, Int32) -> Bytes
 

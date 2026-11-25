@@ -856,7 +856,8 @@ python -m http.server 8080
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")
           .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;");
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
       }
 
       function setBadge(id, text, cls) {
@@ -1401,12 +1402,22 @@ python -m http.server 8080
       async function loadMoonOpaqueBundle() {
         const params = new URLSearchParams(window.location.search);
         const customUrl = params.get("module");
-        const candidates = customUrl
-          ? [customUrl]
-          : [
-              "../../_build/js/release/build/js_api/js_api.js",
-              "../../_build/js/debug/build/js_api/js_api.js",
-            ];
+        let candidates = [
+          "../../_build/js/release/build/js_api/js_api.js",
+          "../../_build/js/debug/build/js_api/js_api.js",
+        ];
+        if (customUrl) {
+          const resolved = new URL(customUrl, window.location.href);
+          if (
+            resolved.origin !== window.location.origin ||
+            !resolved.pathname.endsWith(".js")
+          ) {
+            throw new Error(
+              "Rejected unsafe ?module= URL: only same-origin .js module paths are permitted.",
+            );
+          }
+          candidates = [resolved.href];
+        }
 
         const errors = [];
         for (const url of candidates) {

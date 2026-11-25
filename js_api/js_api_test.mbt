@@ -344,3 +344,78 @@ test "js_api: invalid inputs and unknown suite error handling" {
   assert_eq(@js_api.server_login_finish("999999", "00"), "ERR:InvalidHandle")
   assert_eq(@js_api.server_login_finish("abc", "00"), "ERR:InvalidHandle")
 }
+
+///|
+test "js_api: unicode UTF-8 password, context, and identities roundtrip" {
+  let suite = "ristretto255"
+  let context = "上下文-OPAQUE-🔐"
+  let cred_id = "用户@example.com"
+  let server_id = "服务器.moonopaque.dev"
+  let password = "密码🔑-OPAQUE-日本語"
+  let setup = split_ok(
+    @js_api.server_setup_from_seed(suite, seed_hex(b"utf8-setup")),
+  )
+  let reg_c = split_ok(
+    @js_api.client_register_start(suite, password, seed_hex(b"utf8-reg-c")),
+  )
+  let reg_s = split_ok(
+    @js_api.server_register_response(
+      suite,
+      setup[0],
+      setup[1],
+      setup[2],
+      reg_c[1],
+      cred_id,
+    ),
+  )
+  let reg_fin = split_ok(
+    @js_api.client_register_finish(
+      suite,
+      reg_c[0],
+      reg_s[0],
+      cred_id,
+      server_id,
+      seed_hex(b"utf8-env-nonce"),
+    ),
+  )
+  let login_c = split_ok(
+    @js_api.client_login_start(
+      suite,
+      context,
+      password,
+      seed_hex(b"utf8-login-c"),
+    ),
+  )
+  let login_s = split_ok(
+    @js_api.server_login_start(
+      suite,
+      context,
+      setup[0],
+      setup[1],
+      setup[2],
+      reg_fin[0],
+      cred_id,
+      cred_id,
+      server_id,
+      login_c[1],
+      seed_hex(b"utf8-mask"),
+      seed_hex(b"utf8-snonce"),
+      seed_hex(b"utf8-sks"),
+    ),
+  )
+  let login_c_fin = split_ok(
+    @js_api.client_login_finish(
+      suite,
+      context,
+      login_c[0],
+      cred_id,
+      server_id,
+      login_s[1],
+    ),
+  )
+  let login_s_fin = split_ok(
+    @js_api.server_login_finish(login_s[0], login_c_fin[0]),
+  )
+  assert_eq(login_c_fin[1], login_s_fin[0])
+  assert_eq(login_c_fin[2], reg_fin[1])
+}

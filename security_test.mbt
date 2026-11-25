@@ -2625,3 +2625,53 @@ test "security 26: Curve25519 wrong password, fake KE2 anti-enumeration, KE2/KE3
     )
   }
 }
+
+///|
+test "security 27: Argon2id 32-bit integer overflow parameters rejected without panic" {
+  let suite = @moonopaque.CipherSuite::Ristretto255Sha512
+  let base_cfg = @moonopaque.Config::ristretto255_sha512(context=b"sec-27")
+  let server_setup = sec_unwrap_ok(
+    @moonopaque.ServerSetup::from_seed(suite, Bytes::make(32, b'\x51')),
+    "from_seed",
+  )
+  let (reg_state, reg_req) = sec_unwrap_ok(
+    @moonopaque.create_registration_request_with_random(
+      base_cfg,
+      b"overflow-guard-test",
+      Bytes::make(32, b'\x52'),
+    ),
+    "reg_req",
+  )
+  let reg_resp = sec_unwrap_ok(
+    @moonopaque.create_registration_response(
+      base_cfg, server_setup, reg_req, b"overflow-user",
+    ),
+    "reg_resp",
+  )
+  // Parameters that would overflow 32-bit `8 * parallelism` or `m_prime * 128`
+  let overflow_argon2_ksfs : Array[@moonopaque.Ksf] = [
+    @moonopaque.Ksf::Argon2id(1, 32, 536870912),
+    @moonopaque.Ksf::Argon2id(1, 16777216, 1),
+    @moonopaque.Ksf::Argon2id(1, 2147483647, 1),
+    @moonopaque.Ksf::Argon2id(0, 64, 1),
+    @moonopaque.Ksf::Argon2id(1, 64, 0),
+    @moonopaque.Ksf::Argon2id(1, 12, 2),
+  ]
+  for bad_ksf in overflow_argon2_ksfs {
+    let bad_cfg = @moonopaque.Config::new(suite, b"sec-27", bad_ksf)
+    assert_eq(
+      @moonopaque.finalize_registration_request(
+        bad_cfg,
+        reg_state,
+        reg_resp,
+        None,
+        None,
+        Bytes::make(32, b'\x53'),
+      ),
+      Err(@moonopaque.OpaqueError::InvalidInput),
+    )
+  }
+  assert_eq(@hash.argon2id_checked(b"pw", b"salt", 1, 32, 536870912, 32), None)
+  assert_eq(@hash.argon2id_checked(b"pw", b"salt", 1, 16777216, 1, 32), None)
+  assert_eq(@hash.argon2id_checked(b"pw", b"salt", 1, 32, 1, 3), None)
+}

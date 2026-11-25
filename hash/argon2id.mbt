@@ -150,9 +150,13 @@ fn argon2_next_addresses(
 }
 
 ///|
-/// Full RFC 9106 Argon2id (version 0x13, type y = 2) supporting optional secret key
-/// `secret` and associated data `associated_data`.
-pub fn argon2id_full(
+/// Checked full RFC 9106 Argon2id (version 0x13, type y = 2) supporting optional
+/// secret key `secret` and associated data `associated_data`.
+///
+/// Validates all parameters using 64-bit arithmetic to prevent 32-bit integer
+/// overflow on `8 * parallelism` and `m_prime * 128`. Returns `None` if any
+/// parameter is invalid or exceeds 32-bit working-set limits.
+pub fn argon2id_full_checked(
   password : Bytes,
   salt : Bytes,
   secret : Bytes,
@@ -161,15 +165,22 @@ pub fn argon2id_full(
   m_cost_kib : Int32,
   parallelism : Int32,
   tag_len : Int32,
-) -> Bytes {
-  if parallelism < 1 ||
-    t_cost < 1 ||
-    tag_len < 4 ||
-    m_cost_kib < 8 * parallelism {
-    abort("argon2id: invalid parameters")
+) -> Bytes? {
+  if parallelism < 1 || t_cost < 1 || tag_len < 4 || m_cost_kib < 8 {
+    return None
+  }
+  let p64 = parallelism.to_int64()
+  let m64 = m_cost_kib.to_int64()
+  if m64 < 8L * p64 {
+    return None
+  }
+  let four_p64 = 4L * p64
+  let m_prime64 = four_p64 * (m64 / four_p64)
+  if m_prime64 * 128L > 0x7FFFFFFFL {
+    return None
   }
   let p = parallelism
-  let m_prime = 4 * p * (m_cost_kib / (4 * p))
+  let m_prime = m_prime64.to_int()
   let q = m_prime / p
   let segment_length = q / 4
 
@@ -325,7 +336,45 @@ pub fn argon2id_full(
   for w in 0..<128 {
     store_le64(c_bytes, w * 8, final_block[w])
   }
-  argon2_h_prime(Bytes::makei(1024, i => c_bytes[i]), tag_len)
+  Some(argon2_h_prime(Bytes::makei(1024, i => c_bytes[i]), tag_len))
+}
+
+///|
+/// Checked RFC 9106 Argon2id (version 0x13, type y = 2) with empty secret and
+/// associated data. Returns `None` if parameters are invalid or overflow limits.
+pub fn argon2id_checked(
+  password : Bytes,
+  salt : Bytes,
+  t_cost : Int32,
+  m_cost_kib : Int32,
+  parallelism : Int32,
+  tag_len : Int32,
+) -> Bytes? {
+  argon2id_full_checked(
+    password, salt, b"", b"", t_cost, m_cost_kib, parallelism, tag_len,
+  )
+}
+
+///|
+/// Full RFC 9106 Argon2id (version 0x13, type y = 2) supporting optional secret key
+/// `secret` and associated data `associated_data`.
+pub fn argon2id_full(
+  password : Bytes,
+  salt : Bytes,
+  secret : Bytes,
+  associated_data : Bytes,
+  t_cost : Int32,
+  m_cost_kib : Int32,
+  parallelism : Int32,
+  tag_len : Int32,
+) -> Bytes {
+  match
+    argon2id_full_checked(
+      password, salt, secret, associated_data, t_cost, m_cost_kib, parallelism, tag_len,
+    ) {
+    Some(tag) => tag
+    None => abort("argon2id: invalid parameters")
+  }
 }
 
 ///|

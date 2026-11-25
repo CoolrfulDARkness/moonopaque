@@ -190,14 +190,12 @@ fn suite_stretch(
         Ok(@hash.pbkdf2_hmac_sha512(oprf_output, zero_salt, iterations, nh))
       }
     Argon2id(t_cost, m_cost_kib, parallelism) =>
-      if t_cost < 1 || parallelism < 1 || m_cost_kib < 8 * parallelism {
-        Err(InvalidInput)
-      } else {
-        Ok(
-          @hash.argon2id(
-            oprf_output, zero_salt, t_cost, m_cost_kib, parallelism, nh,
-          ),
-        )
+      match
+        @hash.argon2id_checked(
+          oprf_output, zero_salt, t_cost, m_cost_kib, parallelism, nh,
+        ) {
+        Some(out) => Ok(out)
+        None => Err(InvalidInput)
       }
     Scrypt(n, r, p) =>
       match @hash.scrypt_checked(oprf_output, zero_salt, n, r, p, nh) {

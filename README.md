@@ -4,7 +4,7 @@
 [![RFC 9807 Vectors: 9/9 (100%)](https://img.shields.io/badge/RFC%209807%20Vectors-9%2F9%20(100%25)-2EA043.svg)](#rfc-compliance--verification-matrix)
 [![RFC 9807 §7 Profiles: 3/3](https://img.shields.io/badge/RFC%209807%20%C2%A77%20Profiles-3%2F3%20Built--in-0A66C2.svg)](#rfc-compliance--verification-matrix)
 [![Pure MoonBit](https://img.shields.io/badge/MoonBit-Pure%20%7C%20Zero%20FFI-6E40C9.svg)](https://www.moonbitlang.com/)
-[![Tests: 86+ across 4 Targets](https://img.shields.io/badge/Tests-86%2B%20%7C%204%20Targets%20%7C%200%20Warnings-2EA043.svg)](#cross-target-benchmarks)
+[![Tests: 92 across 4 Targets](https://img.shields.io/badge/Tests-92%20%7C%204%20Targets%20%7C%200%20Warnings-2EA043.svg)](#cross-target-benchmarks)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
 **`CoolrfulDARkness/moonopaque`** is a **pure MoonBit, zero-FFI, Sans-I/O** implementation of **IETF RFC 9807 (OPAQUE-3DH)** — the modern Asymmetric / Augmented Password-Authenticated Key Exchange (aPAKE) protocol.
@@ -12,7 +12,7 @@
 - **100% (9 / 9) Official RFC 9807 Appendix C Vectors** verified byte-for-byte across all 3 IETF standard ciphersuites (`OPAQUE-Ristretto255-SHA512`, `OPAQUE-Ristretto255-Curve25519-SHA512`, and `OPAQUE-P256-SHA256`).
 - **100% (3 / 3) RFC 9807 §7 Recommended Production Profiles** natively built-in with pure-MoonBit **Argon2id (RFC 9106)**, **scrypt (RFC 7914)**, and **PBKDF2 (RFC 8018)**.
 - **Zero-FFI Pure MoonBit**: From finite-field arithmetic and elliptic-curve groups (`ristretto255`, `X25519`, NIST `P-256`) up to RFC 9497 OPRF, memory-hard KSF, sealed envelopes, and 3DH AKE — **every single line is memory-safe MoonBit** with zero external dependencies.
-- **86+ Tests (incl. 26 Adversarial Security Tests) & 11 Cross-Target Benchmarks**: Zero warnings across **Wasm, Wasm-GC, JavaScript, and Native**, plus a zero-dependency interactive browser playground (`examples/web-demo/`).
+- **92 Tests (incl. 27 Adversarial Security Tests) & 11 Cross-Target Benchmarks**: Zero warnings across **Wasm, Wasm-GC, JavaScript, and Native**, plus a zero-dependency interactive browser playground (`examples/web-demo/`).
 
 ---
 
@@ -103,11 +103,11 @@ Registration:
 
 ## RFC Compliance & Verification Matrix
 
-Every cryptographic layer is verified directly against official IETF / NIST test vectors across all 4 targets (`wasm`, `wasm-gc`, `js`, `native`) with **86+ passing tests** and **0 warnings**:
+Every cryptographic layer is verified directly against official IETF / NIST test vectors across all 4 targets (`wasm`, `wasm-gc`, `js`, `native`) with **92 passing tests** and **0 warnings**:
 
 | Specification | Scope Implemented | Official Test Vectors & Security Verification | Package |
 | :--- | :--- | :--- | :--- |
-| **IETF RFC 9807** | Full OPAQUE-3DH across **all 3 standard suites** (`OPAQUE-Ristretto255-SHA512`, `OPAQUE-Ristretto255-Curve25519-SHA512`, `OPAQUE-P256-SHA256`), Registration, Envelope, 3DH AKE, Fake Record Anti-Enumeration, **3/3 §7 Recommended Profiles** | **100% (9 / 9) Appendix C Official Vectors** byte-for-byte (`C.1.1–C.1.6` Real 1–6 + `C.2.1–C.2.3` Fake 1–3) + **26 adversarial security tests** (`security_test.mbt`: wrong password, MITM MAC/nonce/keyshare tampering, replay, cross-context/identity/suite confusion, low-order & off-curve injection) | `moonopaque` |
+| **IETF RFC 9807** | Full OPAQUE-3DH across **all 3 standard suites** (`OPAQUE-Ristretto255-SHA512`, `OPAQUE-Ristretto255-Curve25519-SHA512`, `OPAQUE-P256-SHA256`), Registration, Envelope, 3DH AKE, Fake Record Anti-Enumeration, **3/3 §7 Recommended Profiles** | **100% (9 / 9) Appendix C Official Vectors** byte-for-byte (`C.1.1–C.1.6` Real 1–6 + `C.2.1–C.2.3` Fake 1–3) + **27 adversarial security tests** (`security_test.mbt`: wrong password, MITM MAC/nonce/keyshare tampering, replay, cross-context/identity/suite confusion, low-order & off-curve injection, KSF integer-overflow guards) | `moonopaque` |
 | **IETF RFC 7748** | X25519 Montgomery-ladder Diffie-Hellman, scalar clamping & all-zero shared-secret rejection | §5.2 vectors (1, 2, iterated 1× & 1000×), §6.1 DH vector, all 12 low-order points rejected by `x25519_checked` | `x25519` |
 | **IETF RFC 7914** | Pure-MoonBit `scrypt` (`Salsa20/8`, `BlockMix`, `ROMix`) with power-of-two & overflow guards | §12 official `scrypt` vectors 1–3 (`N=16, r=1, p=1`; `N=1024, r=8, p=16`; `N=16384, r=8, p=1`) + invalid parameter rejection | `hash` |
 | **IETF RFC 9106** | Pure-MoonBit Argon2id (`v=0x13`, `y=2`) memory-hard KSF | §5.3 official Argon2id reference vector (`p=4, t=3, m=32, tag=32`) | `hash` |

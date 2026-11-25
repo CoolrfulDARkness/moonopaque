@@ -473,10 +473,72 @@ async function main() {
     console.log(`  Suite elapsed: ${elapsed} ms`);
   }
 
+  // 7. UTF-8 Unicode Password & Identity Roundtrip Check
+  {
+    const suiteId = "ristretto255";
+    const utf8Context = "上下文-OPAQUE-🔐";
+    const utf8User = "用户@example.com";
+    const utf8Server = "服务器.moonopaque.dev";
+    const utf8Password = "密码🔑-OPAQUE-日本語";
+    const [oprfSeed, serverSk, serverPk] = parseOk(
+      opaque.server_setup_from_seed(suiteId, randHex(32)),
+      3,
+      "utf8 server_setup",
+    );
+    const [regH, regReq] = parseOk(
+      opaque.client_register_start(suiteId, utf8Password, randHex(32)),
+      2,
+      "utf8 reg_start",
+    );
+    const [regResp] = parseOk(
+      opaque.server_register_response(suiteId, oprfSeed, serverSk, serverPk, regReq, utf8User),
+      1,
+      "utf8 reg_resp",
+    );
+    const [recHex, regExp] = parseOk(
+      opaque.client_register_finish(suiteId, regH, regResp, utf8User, utf8Server, randHex(32)),
+      2,
+      "utf8 reg_finish",
+    );
+    const [cH, ke1] = parseOk(
+      opaque.client_login_start(suiteId, utf8Context, utf8Password, randHex(32)),
+      2,
+      "utf8 login_start",
+    );
+    const [sH, ke2] = parseOk(
+      opaque.server_login_start(
+        suiteId,
+        utf8Context,
+        oprfSeed,
+        serverSk,
+        serverPk,
+        recHex,
+        utf8User,
+        utf8User,
+        utf8Server,
+        ke1,
+        randHex(32),
+        randHex(32),
+        randHex(32),
+      ),
+      2,
+      "utf8 server_login_start",
+    );
+    const [ke3, cSk, lExp] = parseOk(
+      opaque.client_login_finish(suiteId, utf8Context, cH, utf8User, utf8Server, ke2),
+      3,
+      "utf8 client_login_finish",
+    );
+    const [sSk] = parseOk(opaque.server_login_finish(sH, ke3), 1, "utf8 server_login_finish");
+    assert.equal(cSk, sSk, "utf8 session_key mismatch");
+    assert.equal(lExp, regExp, "utf8 export_key mismatch");
+    console.log("\n[UTF-8 Unicode Roundtrip] PASS | Chinese + Japanese + Emoji password & identities");
+  }
+
   const totalElapsed = (performance.now() - totalStart).toFixed(1);
   console.log("\n====================================================================");
   console.log(
-    `  ALL 3 RFC 9807 SUITES PASSED (15/15 security checks in ${totalElapsed} ms)`,
+    `  ALL 3 RFC 9807 SUITES + UTF-8 PASSED (16/16 checks in ${totalElapsed} ms)`,
   );
   console.log("====================================================================");
 }
