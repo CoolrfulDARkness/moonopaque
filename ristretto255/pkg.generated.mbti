@@ -1,0 +1,45 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "CoolrfulDARkness/moonopaque/ristretto255"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Element {
+  // private fields
+}
+pub fn Element::add(Self, Self) -> Self
+pub fn Element::base_mul(Scalar) -> Self
+pub fn Element::equal(Self, Self) -> Bool
+pub fn Element::from_bytes(Bytes) -> Self?
+pub fn Element::from_uniform_bytes(Bytes) -> Self?
+pub fn Element::generator() -> Self
+pub fn Element::identity() -> Self
+pub fn Element::is_identity(Self) -> Bool
+pub fn Element::neg(Self) -> Self
+pub fn Element::scalar_mul(Self, Scalar) -> Self
+pub fn Element::sub(Self, Self) -> Self
+pub fn Element::to_bytes(Self) -> Bytes
+pub impl Eq for Element
+
+pub struct Scalar {
+  // private fields
+}
+pub fn Scalar::add(Self, Self) -> Self
+pub fn Scalar::equal(Self, Self) -> Bool
+pub fn Scalar::from_bytes_canonical(Bytes) -> Self?
+pub fn Scalar::from_bytes_wide(Bytes) -> Self?
+pub fn Scalar::invert(Self) -> Self?
+pub fn Scalar::is_zero(Self) -> Bool
+pub fn Scalar::mul(Self, Self) -> Self
+pub fn Scalar::neg(Self) -> Self
+pub fn Scalar::one() -> Self
+pub fn Scalar::sub(Self, Self) -> Self
+pub fn Scalar::to_bytes(Self) -> Bytes
+pub fn Scalar::zero() -> Self
+pub impl Eq for Scalar
+
+// Type aliases
+
+// Traits
