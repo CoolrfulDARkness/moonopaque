@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "CoolrfulDARkness/moonopaque/x25519"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub const KEY_LEN : Int32 = 32
+
+pub fn clamp_scalar(Bytes) -> Result[Bytes, X25519Error]
+
+pub fn derive_keypair(Bytes) -> Result[(Bytes, Bytes), X25519Error]
+
+pub fn key_len() -> Int32
+
+pub fn x25519(Bytes, Bytes) -> Result[Bytes, X25519Error]
+
+pub fn x25519_base(Bytes) -> Result[Bytes, X25519Error]
+
+pub fn x25519_checked(Bytes, Bytes) -> Result[Bytes, X25519Error]
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) enum X25519Error {
+  InvalidLength
+  LowOrderPoint
+}
+pub impl Show for X25519Error
+
+// Type aliases
+
+// Traits
