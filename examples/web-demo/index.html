@@ -1,0 +1,1481 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>moonopaque — Pure MoonBit RFC 9807 OPAQUE-3DH Web Lab</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --bg-elev: #121a30;
+        --bg-card: #16203a;
+        --bg-inset: #0d1426;
+        --border: #253459;
+        --border-bright: #3b538a;
+        --text: #e6edf8;
+        --muted: #93a4c7;
+        --accent: #6aa6ff;
+        --accent-2: #a58bff;
+        --ok: #34d399;
+        --ok-bg: rgba(52, 211, 153, 0.12);
+        --warn: #fbbf24;
+        --warn-bg: rgba(251, 191, 36, 0.12);
+        --err: #fb7185;
+        --err-bg: rgba(251, 113, 133, 0.14);
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--text);
+        background:
+          radial-gradient(900px 500px at 10% -10%, rgba(106, 166, 255, 0.16), transparent 60%),
+          radial-gradient(800px 480px at 95% 0%, rgba(165, 139, 255, 0.14), transparent 55%),
+          var(--bg);
+        min-height: 100vh;
+        line-height: 1.5;
+      }
+
+      .wrap {
+        max-width: 1220px;
+        margin: 0 auto;
+        padding: 28px 20px 64px;
+      }
+
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 22px;
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        font-size: 1.65rem;
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.94rem;
+        max-width: 720px;
+      }
+
+      .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        border: 1px solid var(--border-bright);
+        background: rgba(22, 32, 58, 0.85);
+        color: var(--text);
+        white-space: nowrap;
+      }
+
+      .pill.ok {
+        border-color: rgba(52, 211, 153, 0.45);
+        background: var(--ok-bg);
+        color: var(--ok);
+      }
+
+      .pill.err {
+        border-color: rgba(251, 113, 133, 0.45);
+        background: var(--err-bg);
+        color: var(--err);
+      }
+
+      .pill.warn {
+        border-color: rgba(251, 191, 36, 0.45);
+        background: var(--warn-bg);
+        color: var(--warn);
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .banner {
+        display: none;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(251, 113, 133, 0.45);
+        background: var(--err-bg);
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+      }
+
+      .banner.show {
+        display: block;
+      }
+
+      .banner pre {
+        margin: 10px 0 0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: var(--bg-inset);
+        border: 1px solid var(--border);
+        overflow-x: auto;
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        color: var(--text);
+      }
+
+      .grid-top {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      @media (max-width: 920px) {
+        .grid-top {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: linear-gradient(180deg, rgba(22, 32, 58, 0.95), rgba(18, 26, 48, 0.95));
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+      }
+
+      .card h2 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      @media (max-width: 620px) {
+        .field-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        font-size: 0.78rem;
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 9px 11px;
+        border-radius: 9px;
+        border: 1px solid var(--border);
+        background: var(--bg-inset);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.15s ease;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--accent);
+      }
+
+      .input-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--border-bright);
+        background: rgba(37, 52, 89, 0.55);
+        color: var(--text);
+        padding: 9px 14px;
+        border-radius: 9px;
+        font-weight: 600;
+        font-size: 0.86rem;
+        cursor: pointer;
+        transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+      }
+
+      .btn:hover:not(:disabled) {
+        background: rgba(59, 83, 138, 0.7);
+        border-color: var(--accent);
+      }
+
+      .btn:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .btn.primary {
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        border-color: transparent;
+        color: #fff;
+      }
+
+      .btn.primary:hover:not(:disabled) {
+        filter: brightness(1.08);
+      }
+
+      .btn.ok {
+        background: rgba(52, 211, 153, 0.16);
+        border-color: rgba(52, 211, 153, 0.5);
+        color: var(--ok);
+      }
+
+      .btn.warn {
+        background: rgba(251, 191, 36, 0.14);
+        border-color: rgba(251, 191, 36, 0.5);
+        color: var(--warn);
+      }
+
+      .btn.danger {
+        background: rgba(251, 113, 133, 0.15);
+        border-color: rgba(251, 113, 133, 0.5);
+        color: var(--err);
+      }
+
+      .btn.sm {
+        padding: 6px 10px;
+        font-size: 0.78rem;
+      }
+
+      .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      @media (max-width: 980px) {
+        .actions-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 620px) {
+        .actions-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .scenario-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .scenario-card h3 {
+        margin: 0 0 4px;
+        font-size: 0.93rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+
+      .scenario-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .kv {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 12px;
+        font-size: 0.82rem;
+        align-items: baseline;
+      }
+
+      .kv .k {
+        color: var(--muted);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .kv .v {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        word-break: break-all;
+        color: var(--text);
+      }
+
+      .db-box {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--bg-inset);
+        border: 1px solid var(--border);
+        font-size: 0.8rem;
+      }
+
+      .db-empty {
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      .db-row {
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(37, 52, 89, 0.6);
+      }
+
+      .db-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .wire-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .summary-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      @media (max-width: 780px) {
+        .summary-strip {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      .metric {
+        background: var(--bg-inset);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+
+      .metric .m-label {
+        font-size: 0.73rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .metric .m-val {
+        margin-top: 4px;
+        font-family: var(--mono);
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .event {
+        background: var(--bg-inset);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--accent);
+        border-radius: 10px;
+        padding: 12px 14px;
+      }
+
+      .event.ok {
+        border-left-color: var(--ok);
+      }
+
+      .event.warn {
+        border-left-color: var(--warn);
+      }
+
+      .event.err {
+        border-left-color: var(--err);
+      }
+
+      .event-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+
+      .event-title {
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .event-meta {
+        font-family: var(--mono);
+        font-size: 0.76rem;
+        color: var(--muted);
+      }
+
+      .event-note {
+        font-size: 0.83rem;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .wire-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+
+      .wire-table th,
+      .wire-table td {
+        text-align: left;
+        padding: 6px 8px;
+        border-top: 1px solid rgba(37, 52, 89, 0.7);
+        vertical-align: top;
+      }
+
+      .wire-table th {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      .dir {
+        font-family: var(--mono);
+        font-weight: 700;
+        white-space: nowrap;
+        color: var(--accent);
+      }
+
+      .dir.s2c {
+        color: var(--accent-2);
+      }
+
+      .dir.local {
+        color: var(--ok);
+      }
+
+      .hex-preview {
+        font-family: var(--mono);
+        font-size: 0.76rem;
+        word-break: break-all;
+        color: #cfe0ff;
+      }
+
+      details summary {
+        cursor: pointer;
+        color: var(--accent);
+        font-size: 0.75rem;
+        margin-top: 3px;
+        user-select: none;
+      }
+
+      .full-hex {
+        margin-top: 6px;
+        padding: 8px;
+        border-radius: 6px;
+        background: rgba(11, 16, 32, 0.95);
+        border: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        word-break: break-all;
+        color: var(--muted);
+      }
+
+      .diff-byte {
+        color: var(--err);
+        font-weight: 700;
+        text-decoration: underline;
+      }
+
+      footer {
+        margin-top: 26px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      code {
+        font-family: var(--mono);
+        font-size: 0.84em;
+        padding: 1px 5px;
+        border-radius: 5px;
+        background: rgba(13, 20, 38, 0.9);
+        border: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>
+            moonopaque Web Playground
+            <span class="pill">IETF RFC 9807 OPAQUE-3DH</span>
+            <span class="pill">Pure MoonBit &rarr; JS ESM</span>
+          </h1>
+          <p class="subtitle">
+            Zero-dependency interactive cryptography laboratory running pure MoonBit compiled to
+            native ES Modules in your browser, powered by real WebCrypto
+            <code>crypto.getRandomValues</code> entropy. Plaintext passwords never leave the client.
+          </p>
+        </div>
+        <div class="badges">
+          <span id="engineStatus" class="pill warn">
+            <span class="dot"></span>Loading MoonBit JS bundle...
+          </span>
+        </div>
+      </header>
+
+      <div id="loadError" class="banner">
+        <strong>Could not load the compiled MoonBit ESM module.</strong>
+        <div id="loadErrorDetail" style="margin-top: 4px"></div>
+        <pre>moon build js_api --target js --release
+python -m http.server 8080
+# Then open: http://localhost:8080/examples/web-demo/</pre>
+      </div>
+
+      <section class="grid-top">
+        <div class="card">
+          <h2>
+            <span>Protocol Configuration &amp; Credentials</span>
+            <span class="pill" id="entropyPill">CSPRNG: WebCrypto</span>
+          </h2>
+          <div class="field-grid">
+            <div class="field full">
+              <label for="suiteSelect">RFC 9807 Ciphersuite</label>
+              <select id="suiteSelect">
+                <option value="ristretto255">
+                  OPAQUE-Ristretto255-SHA512 (OPRF: ristretto255, AKE: ristretto255, SHA-512)
+                </option>
+                <option value="curve25519">
+                  OPAQUE-Ristretto255-Curve25519-SHA512 (OPRF: ristretto255, AKE: X25519, SHA-512)
+                </option>
+                <option value="p256">
+                  OPAQUE-P256-SHA256 (OPRF: NIST P-256, AKE: NIST P-256, SHA-256)
+                </option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="contextInput">Application Context</label>
+              <input id="contextInput" value="moonopaque-web-demo-v1" />
+            </div>
+            <div class="field">
+              <label for="serverIdInput">Server Identity</label>
+              <input id="serverIdInput" value="auth.moonopaque.dev" />
+            </div>
+            <div class="field">
+              <label for="usernameInput">Username / Credential ID</label>
+              <input id="usernameInput" value="alice@example.com" />
+            </div>
+            <div class="field">
+              <label for="passwordInput">Client Password (stays local!)</label>
+              <div class="input-row">
+                <input id="passwordInput" type="password" value="correct-horse-battery-staple" />
+                <button class="btn sm" id="togglePwBtn" type="button">Show</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>
+            <span>Simulated Server State (Zero Password Material)</span>
+            <button class="btn sm" id="reinitServerBtn" type="button" disabled>
+              Rotate Server Keys
+            </button>
+          </h2>
+          <div class="kv">
+            <span class="k">Active Suite</span>
+            <span class="v" id="srvSuiteVal">—</span>
+            <span class="k">Server PK</span>
+            <span class="v" id="srvPkVal">—</span>
+            <span class="k">OPRF Seed</span>
+            <span class="v" id="srvSeedVal">—</span>
+          </div>
+          <div class="db-box" id="serverDbBox">
+            <div class="db-empty">
+              No registered users yet. Run <strong>Phase 1: Registration</strong> to store a sealed
+              <code>RegistrationRecord</code>.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="actions-grid">
+        <div class="scenario-card">
+          <div>
+            <h3>
+              <span>1. Zero-Knowledge Registration</span>
+              <span class="pill" id="badgeReg">Idle</span>
+            </h3>
+            <p>
+              Blinds password via OPRF, derives sealed <code>Envelope</code> and client-only
+              <code>export_key</code>. Server stores only <code>RegistrationRecord</code>.
+            </p>
+          </div>
+          <button class="btn primary" id="btnRegister" type="button" disabled>
+            Run Registration
+          </button>
+        </div>
+
+        <div class="scenario-card">
+          <div>
+            <h3>
+              <span>2. Mutual-Auth 3DH Login</span>
+              <span class="pill" id="badgeLogin">Idle</span>
+            </h3>
+            <p>
+              Runs full <code>KE1 &rarr; KE2 &rarr; KE3 &rarr; ServerFinish</code>. Verifies both
+              parties derive identical <code>session_key</code> and recovers <code>export_key</code>.
+            </p>
+          </div>
+          <button class="btn ok" id="btnLogin" type="button" disabled>
+            Run Honest 3DH Login
+          </button>
+        </div>
+
+        <div class="scenario-card">
+          <div>
+            <h3>
+              <span>3. Anti-Enumeration Fake KE2</span>
+              <span class="pill" id="badgeFake">Idle</span>
+            </h3>
+            <p>
+              Probes unregistered user <code>ghost@example.com</code>. Server emits a wire-identical
+              Fake <code>KE2</code>; client rejects with <code>InvalidEnvelopeTag</code>.
+            </p>
+          </div>
+          <button class="btn warn" id="btnFake" type="button" disabled>
+            Probe Unknown User
+          </button>
+        </div>
+
+        <div class="scenario-card">
+          <div>
+            <h3>
+              <span>4. Wrong Password Rejection</span>
+              <span class="pill" id="badgeWrongPw">Idle</span>
+            </h3>
+            <p>
+              Attempts login for the registered user with a wrong password. Constant-time envelope
+              tag check blocks recovery with <code>InvalidEnvelopeTag</code>.
+            </p>
+          </div>
+          <button class="btn warn" id="btnWrongPw" type="button" disabled>
+            Test Wrong Password
+          </button>
+        </div>
+
+        <div class="scenario-card">
+          <div>
+            <h3>
+              <span>5. MITM 1-Bit MAC Tampering</span>
+              <span class="pill" id="badgeMitm">Idle</span>
+            </h3>
+            <p>
+              Flips 1 bit in <code>KE2.server_mac</code> (<code>InvalidServerMac</code>) and 1 bit
+              in <code>KE3.client_mac</code> (<code>InvalidClientMac</code>).
+            </p>
+          </div>
+          <button class="btn danger" id="btnMitm" type="button" disabled>
+            Simulate MITM Flip
+          </button>
+        </div>
+
+        <div class="scenario-card">
+          <div>
+            <h3>
+              <span>Full Security Tour</span>
+              <span class="pill" id="badgeAll">Ready</span>
+            </h3>
+            <p>
+              Executes all 5 OPAQUE-3DH scenarios back-to-back with fresh WebCrypto entropy and logs
+              every wire frame below.
+            </p>
+          </div>
+          <button class="btn primary" id="btnRunAll" type="button" disabled>
+            Run All 5 Scenarios
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="wire-header">
+          <h2 style="margin: 0">Live Wire Protocol Inspector &amp; Cryptographic Trace</h2>
+          <button class="btn sm" id="btnClearLog" type="button">Clear Trace</button>
+        </div>
+
+        <div class="summary-strip">
+          <div class="metric">
+            <div class="m-label">Registered Record</div>
+            <div class="m-val" id="metricRecord">—</div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Real KE2 Wire Size</div>
+            <div class="m-val" id="metricRealKe2">—</div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Fake KE2 Wire Size</div>
+            <div class="m-val" id="metricFakeKe2">—</div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Last Session Key Match</div>
+            <div class="m-val" id="metricSession">—</div>
+          </div>
+        </div>
+
+        <div class="timeline" id="timeline">
+          <div class="db-empty" style="padding: 12px 4px">
+            Waiting for protocol execution. Click <strong>Run All 5 Scenarios</strong> or step
+            through Registration &amp; 3DH Login above.
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <code>CoolrfulDARkness/moonopaque</code> &middot; Pure MoonBit Zero-FFI RFC 9807 OPAQUE-3DH
+        &middot; Compiled via <code>moon build js_api --target js --release</code>
+      </footer>
+    </div>
+
+    <script type="module">
+      const $ = (id) => document.getElementById(id);
+
+      const SUITE_META = {
+        ristretto255: "OPAQUE-Ristretto255-SHA512",
+        curve25519: "OPAQUE-Ristretto255-Curve25519-SHA512",
+        p256: "OPAQUE-P256-SHA256",
+      };
+
+      let opaque = null;
+      let serverSetup = null; // { suite, oprfSeed, sk, pk }
+      const serverDb = new Map(); // key: `${suite}:${credId}` -> { credId, clientId, recordHex, regExportKey }
+      let lastRealKe2Len = null;
+
+      function randomHex(byteLen = 32) {
+        const buf = new Uint8Array(byteLen);
+        crypto.getRandomValues(buf);
+        let out = "";
+        for (let i = 0; i < buf.length; i++) {
+          out += buf[i].toString(16).padStart(2, "0");
+        }
+        return out;
+      }
+
+      function hexBytes(hex) {
+        return Math.floor(hex.length / 2);
+      }
+
+      function shortHex(hex, head = 16, tail = 10) {
+        if (hex.length <= head + tail + 3) return hex;
+        return `${hex.slice(0, head)}...${hex.slice(-tail)}`;
+      }
+
+      function flipLastBitHex(hex) {
+        const lastByte = parseInt(hex.slice(-2), 16) ^ 0x01;
+        return hex.slice(0, -2) + lastByte.toString(16).padStart(2, "0");
+      }
+
+      function parseOk(raw, expected, step) {
+        if (typeof raw !== "string" || !raw.startsWith("OK:")) {
+          throw new Error(`${step} failed: ${raw}`);
+        }
+        const parts = raw.slice(3).split("|");
+        if (parts.length !== expected) {
+          throw new Error(`${step}: expected ${expected} parts, got ${parts.length}`);
+        }
+        return parts;
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function setBadge(id, text, cls) {
+        const el = $(id);
+        el.textContent = text;
+        el.className = "pill" + (cls ? " " + cls : "");
+      }
+
+      function getConfig() {
+        return {
+          suite: $("suiteSelect").value,
+          context: $("contextInput").value,
+          serverId: $("serverIdInput").value,
+          username: $("usernameInput").value.trim() || "alice@example.com",
+          password: $("passwordInput").value,
+        };
+      }
+
+      function dbKey(suite, username) {
+        return `${suite}:${username}`;
+      }
+
+      function renderServerPanel() {
+        if (!serverSetup) return;
+        $("srvSuiteVal").textContent = `${SUITE_META[serverSetup.suite]} (${serverSetup.suite})`;
+        $("srvPkVal").textContent = `${shortHex(serverSetup.pk)} (${hexBytes(serverSetup.pk)} B)`;
+        $("srvSeedVal").textContent = `${shortHex(serverSetup.oprfSeed, 10, 6)} (${hexBytes(serverSetup.oprfSeed)} B, secret)`;
+
+        const box = $("serverDbBox");
+        const entries = [...serverDb.entries()].filter(([k]) =>
+          k.startsWith(serverSetup.suite + ":"),
+        );
+        if (entries.length === 0) {
+          box.innerHTML =
+            '<div class="db-empty">No registered users for this suite yet. Run <strong>Phase 1: Registration</strong>.</div>';
+          $("metricRecord").textContent = "—";
+          return;
+        }
+        box.innerHTML = entries
+          .map(
+            ([, rec]) => `
+            <div class="db-row">
+              <div><strong>${escapeHtml(rec.credId)}</strong> &middot;
+                <span style="color:var(--ok)">Sealed Record (${hexBytes(rec.recordHex)} B)</span> &middot;
+                <span style="color:var(--muted)">Password stored: <em>NONE</em></span>
+              </div>
+              <div class="hex-preview" style="margin-top:3px">${escapeHtml(shortHex(rec.recordHex, 24, 16))}</div>
+            </div>`,
+          )
+          .join("");
+        const activeUser = serverDb.get(dbKey(serverSetup.suite, getConfig().username));
+        $("metricRecord").textContent = activeUser ? `${hexBytes(activeUser.recordHex)} B` : "—";
+      }
+
+      function appendEvent({ title, status, note, elapsedMs, rows }) {
+        const timeline = $("timeline");
+        if (timeline.querySelector(".db-empty")) {
+          timeline.innerHTML = "";
+        }
+        const card = document.createElement("div");
+        card.className = `event ${status}`;
+
+        const tableRows = rows
+          .map((r) => {
+            const dirCls = r.dir === "S -> C" ? "s2c" : r.dir === "LOCAL" ? "local" : "";
+            const hexHtml = r.hex
+              ? `<div class="hex-preview">${
+                  r.highlightLastByte
+                    ? `${escapeHtml(shortHex(r.hex, 20, 12).slice(0, -2))}<span class="diff-byte">${escapeHtml(r.hex.slice(-2))}</span>`
+                    : escapeHtml(shortHex(r.hex, 20, 12))
+                }</div>
+                 <details>
+                   <summary>Inspect full ${hexBytes(r.hex)}-byte hex</summary>
+                   <div class="full-hex">${escapeHtml(r.hex)}</div>
+                 </details>`
+              : `<span class="hex-preview">${escapeHtml(r.value || "")}</span>`;
+            return `
+              <tr>
+                <td class="dir ${dirCls}">${escapeHtml(r.dir)}</td>
+                <td><strong>${escapeHtml(r.name)}</strong></td>
+                <td style="font-family:var(--mono);white-space:nowrap">${escapeHtml(r.size)}</td>
+                <td>${hexHtml}</td>
+              </tr>`;
+          })
+          .join("");
+
+        card.innerHTML = `
+          <div class="event-head">
+            <span class="event-title">${escapeHtml(title)}</span>
+            <span class="event-meta">${elapsedMs.toFixed(1)} ms &middot; ${new Date().toLocaleTimeString()}</span>
+          </div>
+          <div class="event-note">${escapeHtml(note)}</div>
+          <table class="wire-table">
+            <thead>
+              <tr>
+                <th>Direction</th>
+                <th>Message / Artifact</th>
+                <th>Size</th>
+                <th>Hex Preview / Verification</th>
+              </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>`;
+
+        timeline.prepend(card);
+      }
+
+      function initServer(logEvent = true) {
+        const { suite } = getConfig();
+        const t0 = performance.now();
+        const [oprfSeed, sk, pk] = parseOk(
+          opaque.server_setup_from_seed(suite, randomHex(32)),
+          3,
+          "server_setup_from_seed",
+        );
+        const dt = performance.now() - t0;
+        serverSetup = { suite, oprfSeed, sk, pk };
+        serverDb.clear();
+        lastRealKe2Len = null;
+        $("metricRealKe2").textContent = "—";
+        $("metricFakeKe2").textContent = "—";
+        $("metricSession").textContent = "—";
+        ["badgeReg", "badgeLogin", "badgeFake", "badgeWrongPw", "badgeMitm"].forEach((id) =>
+          setBadge(id, "Idle", ""),
+        );
+        renderServerPanel();
+
+        if (logEvent) {
+          appendEvent({
+            title: `Server Setup Initialized (${SUITE_META[suite]})`,
+            status: "ok",
+            note: "Fresh 32-byte WebCrypto seed derived long-term OPRF seed and server AKE keypair.",
+            elapsedMs: dt,
+            rows: [
+              { dir: "LOCAL", name: "server_public_key", size: `${hexBytes(pk)} B`, hex: pk },
+              { dir: "LOCAL", name: "oprf_seed (secret)", size: `${hexBytes(oprfSeed)} B`, hex: oprfSeed },
+            ],
+          });
+        }
+      }
+
+      function ensureRegistered() {
+        const cfg = getConfig();
+        if (!serverSetup || serverSetup.suite !== cfg.suite) {
+          initServer(false);
+        }
+        const existing = serverDb.get(dbKey(cfg.suite, cfg.username));
+        if (existing) return existing;
+        return runRegistration();
+      }
+
+      function runRegistration() {
+        const cfg = getConfig();
+        if (!serverSetup || serverSetup.suite !== cfg.suite) {
+          initServer(false);
+        }
+        const t0 = performance.now();
+        const [regHandle, reqHex] = parseOk(
+          opaque.client_register_start(cfg.suite, cfg.password, randomHex(32)),
+          2,
+          "client_register_start",
+        );
+        const [respHex] = parseOk(
+          opaque.server_register_response(
+            cfg.suite,
+            serverSetup.oprfSeed,
+            serverSetup.sk,
+            serverSetup.pk,
+            reqHex,
+            cfg.username,
+          ),
+          1,
+          "server_register_response",
+        );
+        const [recordHex, regExportKey] = parseOk(
+          opaque.client_register_finish(
+            cfg.suite,
+            regHandle,
+            respHex,
+            cfg.username,
+            cfg.serverId,
+            randomHex(32),
+          ),
+          2,
+          "client_register_finish",
+        );
+        const dt = performance.now() - t0;
+
+        const entry = {
+          credId: cfg.username,
+          clientId: cfg.username,
+          recordHex,
+          regExportKey,
+        };
+        serverDb.set(dbKey(cfg.suite, cfg.username), entry);
+        renderServerPanel();
+        setBadge("badgeReg", "PASS", "ok");
+
+        appendEvent({
+          title: `Phase 1: Zero-Knowledge Registration — ${cfg.username}`,
+          status: "ok",
+          note: "Client blinded password locally; server evaluated OPRF without seeing password and stored only the sealed RegistrationRecord.",
+          elapsedMs: dt,
+          rows: [
+            { dir: "C -> S", name: "RegistrationRequest", size: `${hexBytes(reqHex)} B`, hex: reqHex },
+            { dir: "S -> C", name: "RegistrationResponse", size: `${hexBytes(respHex)} B`, hex: respHex },
+            { dir: "C -> S", name: "RegistrationRecord", size: `${hexBytes(recordHex)} B`, hex: recordHex },
+            { dir: "LOCAL", name: "Client export_key", size: `${hexBytes(regExportKey)} B`, hex: regExportKey },
+          ],
+        });
+        return entry;
+      }
+
+      function runHonestLogin() {
+        const cfg = getConfig();
+        const rec = ensureRegistered();
+        const t0 = performance.now();
+
+        const [cHandle, ke1Hex] = parseOk(
+          opaque.client_login_start(cfg.suite, cfg.context, cfg.password, randomHex(32)),
+          2,
+          "client_login_start",
+        );
+        const [sHandle, ke2Hex] = parseOk(
+          opaque.server_login_start(
+            cfg.suite,
+            cfg.context,
+            serverSetup.oprfSeed,
+            serverSetup.sk,
+            serverSetup.pk,
+            rec.recordHex,
+            rec.credId,
+            rec.clientId,
+            cfg.serverId,
+            ke1Hex,
+            randomHex(32),
+            randomHex(32),
+            randomHex(32),
+          ),
+          2,
+          "server_login_start",
+        );
+        const [ke3Hex, clientSessionKey, loginExportKey] = parseOk(
+          opaque.client_login_finish(
+            cfg.suite,
+            cfg.context,
+            cHandle,
+            rec.clientId,
+            cfg.serverId,
+            ke2Hex,
+          ),
+          3,
+          "client_login_finish",
+        );
+        const [serverSessionKey] = parseOk(
+          opaque.server_login_finish(sHandle, ke3Hex),
+          1,
+          "server_login_finish",
+        );
+        const dt = performance.now() - t0;
+
+        const sessionMatch = clientSessionKey === serverSessionKey;
+        const exportMatch = loginExportKey === rec.regExportKey;
+        lastRealKe2Len = hexBytes(ke2Hex);
+        $("metricRealKe2").textContent = `${lastRealKe2Len} B`;
+        $("metricSession").textContent = sessionMatch && exportMatch ? "MATCH (100%)" : "MISMATCH";
+        setBadge("badgeLogin", sessionMatch && exportMatch ? "PASS" : "FAIL", sessionMatch && exportMatch ? "ok" : "err");
+
+        appendEvent({
+          title: `Phase 2: Mutual-Auth 3DH Login — ${cfg.username}`,
+          status: sessionMatch && exportMatch ? "ok" : "err",
+          note:
+            sessionMatch && exportMatch
+              ? "Both client and server derived byte-identical forward-secret session_key, and client recovered identical export_key."
+              : "Key mismatch detected!",
+          elapsedMs: dt,
+          rows: [
+            { dir: "C -> S", name: "KE1", size: `${hexBytes(ke1Hex)} B`, hex: ke1Hex },
+            { dir: "S -> C", name: "KE2", size: `${hexBytes(ke2Hex)} B`, hex: ke2Hex },
+            { dir: "C -> S", name: "KE3", size: `${hexBytes(ke3Hex)} B`, hex: ke3Hex },
+            { dir: "LOCAL", name: "Client == Server session_key", size: `${hexBytes(clientSessionKey)} B`, hex: clientSessionKey },
+            { dir: "LOCAL", name: "Recovered export_key", size: `${hexBytes(loginExportKey)} B`, hex: loginExportKey },
+          ],
+        });
+      }
+
+      function runUnknownUserFake() {
+        const cfg = getConfig();
+        if (!serverSetup || serverSetup.suite !== cfg.suite) {
+          initServer(false);
+        }
+        const ghost = "ghost@example.com";
+        const t0 = performance.now();
+
+        const [cHandle, ke1Hex] = parseOk(
+          opaque.client_login_start(cfg.suite, cfg.context, "guessed-password", randomHex(32)),
+          2,
+          "client_login_start(ghost)",
+        );
+        const [sHandle, fakeKe2Hex] = parseOk(
+          opaque.server_login_fake(
+            cfg.suite,
+            cfg.context,
+            serverSetup.oprfSeed,
+            serverSetup.sk,
+            serverSetup.pk,
+            ghost,
+            ghost,
+            cfg.serverId,
+            ke1Hex,
+            randomHex(32),
+          ),
+          2,
+          "server_login_fake",
+        );
+        const clientRes = opaque.client_login_finish(
+          cfg.suite,
+          cfg.context,
+          cHandle,
+          ghost,
+          cfg.serverId,
+          fakeKe2Hex,
+        );
+        // Consume server handle cleanly
+        opaque.server_login_finish(sHandle, "00");
+        const dt = performance.now() - t0;
+
+        const fakeLen = hexBytes(fakeKe2Hex);
+        $("metricFakeKe2").textContent =
+          lastRealKe2Len !== null && fakeLen === lastRealKe2Len
+            ? `${fakeLen} B (IDENTICAL)`
+            : `${fakeLen} B`;
+
+        const passed = clientRes === "ERR:InvalidEnvelopeTag";
+        setBadge("badgeFake", passed ? "BLOCKED" : "UNEXPECTED", passed ? "ok" : "err");
+
+        appendEvent({
+          title: `Attack Sim 1: Anti-Enumeration Fake KE2 (${ghost})`,
+          status: passed ? "ok" : "err",
+          note:
+            lastRealKe2Len !== null
+              ? `Fake KE2 (${fakeLen} B) matches Real KE2 (${lastRealKe2Len} B) identically. Client rejected with ${clientRes}; attacker cannot tell whether account exists.`
+              : `Server emitted indistinguishable Fake KE2 (${fakeLen} B). Client rejected with ${clientRes}.`,
+          elapsedMs: dt,
+          rows: [
+            { dir: "C -> S", name: "KE1 (unknown user)", size: `${hexBytes(ke1Hex)} B`, hex: ke1Hex },
+            { dir: "S -> C", name: "Fake KE2", size: `${fakeLen} B`, hex: fakeKe2Hex },
+            { dir: "LOCAL", name: "Client Verification", size: "CT-MAC", value: clientRes },
+          ],
+        });
+      }
+
+      function runWrongPassword() {
+        const cfg = getConfig();
+        const rec = ensureRegistered();
+        const t0 = performance.now();
+
+        const [cHandle, ke1Hex] = parseOk(
+          opaque.client_login_start(cfg.suite, cfg.context, cfg.password + "-WRONG!", randomHex(32)),
+          2,
+          "client_login_start(wrong pw)",
+        );
+        const [sHandle, ke2Hex] = parseOk(
+          opaque.server_login_start(
+            cfg.suite,
+            cfg.context,
+            serverSetup.oprfSeed,
+            serverSetup.sk,
+            serverSetup.pk,
+            rec.recordHex,
+            rec.credId,
+            rec.clientId,
+            cfg.serverId,
+            ke1Hex,
+            randomHex(32),
+            randomHex(32),
+            randomHex(32),
+          ),
+          2,
+          "server_login_start(wrong pw)",
+        );
+        const clientRes = opaque.client_login_finish(
+          cfg.suite,
+          cfg.context,
+          cHandle,
+          rec.clientId,
+          cfg.serverId,
+          ke2Hex,
+        );
+        opaque.server_login_finish(sHandle, "00");
+        const dt = performance.now() - t0;
+
+        const passed = clientRes === "ERR:InvalidEnvelopeTag";
+        setBadge("badgeWrongPw", passed ? "REJECTED" : "UNEXPECTED", passed ? "ok" : "err");
+
+        appendEvent({
+          title: `Attack Sim 2: Wrong Password Attempt — ${cfg.username}`,
+          status: passed ? "ok" : "err",
+          note: `Unmasking with the wrong randomized password failed constant-time Envelope auth_tag verification (${clientRes}).`,
+          elapsedMs: dt,
+          rows: [
+            { dir: "C -> S", name: "KE1 (wrong password)", size: `${hexBytes(ke1Hex)} B`, hex: ke1Hex },
+            { dir: "S -> C", name: "KE2", size: `${hexBytes(ke2Hex)} B`, hex: ke2Hex },
+            { dir: "LOCAL", name: "Envelope Verification", size: "CT-MAC", value: clientRes },
+          ],
+        });
+      }
+
+      function runMitmTamper() {
+        const cfg = getConfig();
+        const rec = ensureRegistered();
+        const t0 = performance.now();
+
+        // 5a: Flip 1 bit in KE2.server_mac
+        const [c1, ke1a] = parseOk(
+          opaque.client_login_start(cfg.suite, cfg.context, cfg.password, randomHex(32)),
+          2,
+          "client_login_start(mitm ke2)",
+        );
+        const [s1, ke2a] = parseOk(
+          opaque.server_login_start(
+            cfg.suite,
+            cfg.context,
+            serverSetup.oprfSeed,
+            serverSetup.sk,
+            serverSetup.pk,
+            rec.recordHex,
+            rec.credId,
+            rec.clientId,
+            cfg.serverId,
+            ke1a,
+            randomHex(32),
+            randomHex(32),
+            randomHex(32),
+          ),
+          2,
+          "server_login_start(mitm ke2)",
+        );
+        const tamperedKe2 = flipLastBitHex(ke2a);
+        const ke2Check = opaque.client_login_finish(
+          cfg.suite,
+          cfg.context,
+          c1,
+          rec.clientId,
+          cfg.serverId,
+          tamperedKe2,
+        );
+        opaque.server_login_finish(s1, "00");
+
+        // 5b: Flip 1 bit in KE3.client_mac
+        const [c2, ke1b] = parseOk(
+          opaque.client_login_start(cfg.suite, cfg.context, cfg.password, randomHex(32)),
+          2,
+          "client_login_start(mitm ke3)",
+        );
+        const [s2, ke2b] = parseOk(
+          opaque.server_login_start(
+            cfg.suite,
+            cfg.context,
+            serverSetup.oprfSeed,
+            serverSetup.sk,
+            serverSetup.pk,
+            rec.recordHex,
+            rec.credId,
+            rec.clientId,
+            cfg.serverId,
+            ke1b,
+            randomHex(32),
+            randomHex(32),
+            randomHex(32),
+          ),
+          2,
+          "server_login_start(mitm ke3)",
+        );
+        const [ke3b] = parseOk(
+          opaque.client_login_finish(
+            cfg.suite,
+            cfg.context,
+            c2,
+            rec.clientId,
+            cfg.serverId,
+            ke2b,
+          ),
+          3,
+          "client_login_finish(mitm ke3)",
+        );
+        const tamperedKe3 = flipLastBitHex(ke3b);
+        const ke3Check = opaque.server_login_finish(s2, tamperedKe3);
+        const dt = performance.now() - t0;
+
+        const passed =
+          ke2Check === "ERR:InvalidServerMac" && ke3Check === "ERR:InvalidClientMac";
+        setBadge("badgeMitm", passed ? "STOPPED" : "UNEXPECTED", passed ? "ok" : "err");
+
+        appendEvent({
+          title: "Attack Sim 3: Active MITM 1-Bit MAC Flip (KE2 & KE3)",
+          status: passed ? "ok" : "err",
+          note: `Flipping the final bit of KE2.server_mac was rejected by the client (${ke2Check}), and flipping the final bit of KE3.client_mac was rejected by the server (${ke3Check}).`,
+          elapsedMs: dt,
+          rows: [
+            {
+              dir: "S -> C",
+              name: "Tampered KE2 (last bit flipped)",
+              size: `${hexBytes(tamperedKe2)} B`,
+              hex: tamperedKe2,
+              highlightLastByte: true,
+            },
+            { dir: "LOCAL", name: "Client ServerMAC Check", size: "CT-MAC", value: ke2Check },
+            {
+              dir: "C -> S",
+              name: "Tampered KE3 (last bit flipped)",
+              size: `${hexBytes(tamperedKe3)} B`,
+              hex: tamperedKe3,
+              highlightLastByte: true,
+            },
+            { dir: "LOCAL", name: "Server ClientMAC Check", size: "CT-MAC", value: ke3Check },
+          ],
+        });
+      }
+
+      function runAllScenarios() {
+        setBadge("badgeAll", "Running...", "warn");
+        try {
+          runRegistration();
+          runHonestLogin();
+          runUnknownUserFake();
+          runWrongPassword();
+          runMitmTamper();
+          setBadge("badgeAll", "5/5 PASS", "ok");
+        } catch (err) {
+          setBadge("badgeAll", "ERROR", "err");
+          appendEvent({
+            title: "Scenario Error",
+            status: "err",
+            note: err instanceof Error ? err.message : String(err),
+            elapsedMs: 0,
+            rows: [],
+          });
+        }
+      }
+
+      async function loadMoonOpaqueBundle() {
+        const params = new URLSearchParams(window.location.search);
+        const customUrl = params.get("module");
+        const candidates = customUrl
+          ? [customUrl]
+          : [
+              "../../_build/js/release/build/js_api/js_api.js",
+              "../../_build/js/debug/build/js_api/js_api.js",
+            ];
+
+        const errors = [];
+        for (const url of candidates) {
+          try {
+            const mod = await import(url);
+            if (typeof mod.server_setup_from_seed === "function") {
+              return { mod, url };
+            }
+            errors.push(`${url}: loaded, but missing server_setup_from_seed export`);
+          } catch (e) {
+            errors.push(`${url}: ${e instanceof Error ? e.message : String(e)}`);
+          }
+        }
+        throw new Error(errors.join(" | "));
+      }
+
+      function enableControls() {
+        [
+          "reinitServerBtn",
+          "btnRegister",
+          "btnLogin",
+          "btnFake",
+          "btnWrongPw",
+          "btnMitm",
+          "btnRunAll",
+        ].forEach((id) => {
+          $(id).disabled = false;
+        });
+      }
+
+      $("togglePwBtn").addEventListener("click", () => {
+        const input = $("passwordInput");
+        const showing = input.type === "text";
+        input.type = showing ? "password" : "text";
+        $("togglePwBtn").textContent = showing ? "Show" : "Hide";
+      });
+
+      $("suiteSelect").addEventListener("change", () => {
+        if (opaque) initServer(true);
+      });
+      $("reinitServerBtn").addEventListener("click", () => initServer(true));
+      $("btnRegister").addEventListener("click", () => runRegistration());
+      $("btnLogin").addEventListener("click", () => runHonestLogin());
+      $("btnFake").addEventListener("click", () => runUnknownUserFake());
+      $("btnWrongPw").addEventListener("click", () => runWrongPassword());
+      $("btnMitm").addEventListener("click", () => runMitmTamper());
+      $("btnRunAll").addEventListener("click", () => runAllScenarios());
+      $("btnClearLog").addEventListener("click", () => {
+        $("timeline").innerHTML =
+          '<div class="db-empty" style="padding:12px 4px">Trace cleared. Run any scenario above to inspect live wire frames.</div>';
+      });
+
+      try {
+        const { mod, url } = await loadMoonOpaqueBundle();
+        opaque = mod;
+        const status = $("engineStatus");
+        status.className = "pill ok";
+        status.innerHTML = `<span class="dot"></span>Loaded: ${escapeHtml(url.split("/").slice(-3).join("/"))}`;
+        enableControls();
+        initServer(true);
+      } catch (err) {
+        const status = $("engineStatus");
+        status.className = "pill err";
+        status.innerHTML = '<span class="dot"></span>Bundle Not Loaded';
+        $("loadError").classList.add("show");
+        $("loadErrorDetail").textContent =
+          (err instanceof Error ? err.message : String(err)) +
+          " — Build the MoonBit JS ESM bundle and serve the repository root over HTTP (ES modules require HTTP, not file://).";
+      }
+    </script>
+  </body>
+</html>

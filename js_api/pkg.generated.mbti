@@ -1,0 +1,29 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "CoolrfulDARkness/moonopaque/js_api"
+
+// Values
+pub fn client_login_finish(String, String, String, String, String, String) -> String
+
+pub fn client_login_start(String, String, String, String) -> String
+
+pub fn client_register_finish(String, String, String, String, String, String) -> String
+
+pub fn client_register_start(String, String, String) -> String
+
+pub fn server_login_fake(String, String, String, String, String, String, String, String, String, String) -> String
+
+pub fn server_login_finish(String, String) -> String
+
+pub fn server_login_start(String, String, String, String, String, String, String, String, String, String, String, String, String) -> String
+
+pub fn server_register_response(String, String, String, String, String, String) -> String
+
+pub fn server_setup_from_seed(String, String) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

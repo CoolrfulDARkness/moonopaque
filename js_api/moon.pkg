@@ -1,0 +1,24 @@
+import {
+  "CoolrfulDARkness/moonopaque" @opaque,
+  "CoolrfulDARkness/moonopaque/hash",
+  "moonbitlang/core/encoding/utf8",
+}
+
+options(
+  link: {
+    "js": {
+      "exports": [
+        "server_setup_from_seed",
+        "client_register_start",
+        "server_register_response",
+        "client_register_finish",
+        "client_login_start",
+        "server_login_start",
+        "server_login_fake",
+        "client_login_finish",
+        "server_login_finish",
+      ],
+      "format": "esm",
+    },
+  },
+)
