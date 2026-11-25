@@ -8,7 +8,17 @@ repository = "https://github.com/CoolrfulDARkness/moonopaque"
 
 license = "Apache-2.0"
 
-keywords = ["opaque", "apake", "rfc9807", "rfc9497", "oprf", "ristretto255", "p256", "cryptography", "pake"]
+keywords = [
+  "opaque",
+  "apake",
+  "rfc9807",
+  "rfc9497",
+  "oprf",
+  "ristretto255",
+  "p256",
+  "cryptography",
+  "pake",
+]
 
 preferred_target = "wasm"
 
