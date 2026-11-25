@@ -1,5 +1,6 @@
-// import {
-//   "CoolrfulDARkness/moonopaque" @lib,
-// }
+import {
+  "CoolrfulDARkness/moonopaque" @opaque,
+  "CoolrfulDARkness/moonopaque/hash",
+}
 
 pkgtype(kind: "executable")
