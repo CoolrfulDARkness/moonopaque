@@ -38,6 +38,10 @@ pub fn pbkdf2_hmac_sha256(Bytes, Bytes, Int32, Int32) -> Bytes
 
 pub fn pbkdf2_hmac_sha512(Bytes, Bytes, Int32, Int32) -> Bytes
 
+pub fn scrypt(Bytes, Bytes, Int32, Int32, Int32, Int32) -> Bytes
+
+pub fn scrypt_checked(Bytes, Bytes, Int32, Int32, Int32, Int32) -> Bytes?
+
 pub fn sha256(Bytes) -> Bytes
 
 pub fn sha512(Bytes) -> Bytes
