@@ -3,6 +3,7 @@
 #derive(Eq, Debug)
 pub(all) enum CipherSuite {
   Ristretto255Sha512
+  Ristretto255Curve25519Sha512
   P256Sha256
 }
 
@@ -10,6 +11,8 @@ pub(all) enum CipherSuite {
 pub impl Show for CipherSuite with fn output(self, logger) {
   match self {
     Ristretto255Sha512 => logger.write_string("Ristretto255Sha512")
+    Ristretto255Curve25519Sha512 =>
+      logger.write_string("Ristretto255Curve25519Sha512")
     P256Sha256 => logger.write_string("P256Sha256")
   }
 }
@@ -21,12 +24,14 @@ pub impl Show for CipherSuite with fn output(self, logger) {
 /// - `Pbkdf2Sha256(iterations)`: PBKDF2-HMAC-SHA256 with 16 zero-byte salt and `dk_len = Nh`.
 /// - `Pbkdf2Sha512(iterations)`: PBKDF2-HMAC-SHA512 with 16 zero-byte salt and `dk_len = Nh`.
 /// - `Argon2id(t_cost, m_cost_kib, parallelism)`: RFC 9106 Argon2id with 16 zero-byte salt and `T = Nh`.
+/// - `Scrypt(n, r, p)`: RFC 7914 scrypt with 16 zero-byte salt and `dk_len = Nh`.
 /// - `Custom(f)`: caller-provided collision-resistant stretching function.
 pub(all) enum Ksf {
   Identity
   Pbkdf2Sha256(Int32)
   Pbkdf2Sha512(Int32)
   Argon2id(Int32, Int32, Int32)
+  Scrypt(Int32, Int32, Int32)
   Custom((Bytes) -> Bytes)
 }
 
@@ -88,12 +93,48 @@ pub fn Config::ristretto255_sha512(
 }
 
 ///|
+/// Creates an `OPAQUE-Ristretto255-Curve25519-SHA512` configuration
+/// (OPRF: `ristretto255-SHA512`, AKE Group: `curve25519` X25519, Hash/KDF/MAC: SHA-512).
+pub fn Config::ristretto255_curve25519_sha512(
+  context~ : Bytes = b"",
+  ksf~ : Ksf = Identity,
+) -> Config {
+  { suite: Ristretto255Curve25519Sha512, context, ksf, }
+}
+
+///|
 /// Creates an `OPAQUE-P256-SHA256` configuration.
 pub fn Config::p256_sha256(
   context~ : Bytes = b"",
   ksf~ : Ksf = Identity,
 ) -> Config {
   { suite: P256Sha256, context, ksf, }
+}
+
+///|
+/// RFC 9807 §7 Recommended Configuration 1:
+/// `ristretto255-SHA512`, HKDF-SHA-512, HMAC-SHA-512, SHA-512,
+/// `Argon2id(S = zeroes(16), t = 1, m = 2^21, p = 4, T = Nh)`, `ristretto255`.
+pub fn Config::recommended_ristretto255_argon2id(
+  context~ : Bytes = b"",
+) -> Config {
+  { suite: Ristretto255Sha512, context, ksf: Argon2id(1, 2097152, 4), }
+}
+
+///|
+/// RFC 9807 §7 Recommended Configuration 2:
+/// `P256-SHA256`, HKDF-SHA-256, HMAC-SHA-256, SHA-256,
+/// `Argon2id(S = zeroes(16), t = 1, m = 2^21, p = 4, T = Nh)`, `P-256`.
+pub fn Config::recommended_p256_argon2id(context~ : Bytes = b"") -> Config {
+  { suite: P256Sha256, context, ksf: Argon2id(1, 2097152, 4), }
+}
+
+///|
+/// RFC 9807 §7 Recommended Configuration 3:
+/// `P256-SHA256`, HKDF-SHA-256, HMAC-SHA-256, SHA-256,
+/// `scrypt(S = zeroes(16), N = 32768, r = 8, p = 1, dkLen = 32)`, `P-256`.
+pub fn Config::recommended_p256_scrypt(context~ : Bytes = b"") -> Config {
+  { suite: P256Sha256, context, ksf: Scrypt(32768, 8, 1), }
 }
 
 ///|
@@ -138,7 +179,7 @@ pub fn ServerSetup::from_keys(
   if server_public_key.length() != suite_npk(suite) {
     return Err(InvalidKey)
   }
-  match validate_group_element(suite, server_public_key) {
+  match validate_ake_public_key(suite, server_public_key) {
     Err(_) => return Err(InvalidKey)
     Ok(_) => ()
   }
@@ -269,7 +310,7 @@ pub fn RegistrationRequest::from_bytes(
   if bytes.length() != suite_noe(suite) {
     return Err(InvalidMessageLength)
   }
-  match validate_group_element(suite, bytes) {
+  match validate_oprf_element(suite, bytes) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
@@ -315,11 +356,11 @@ pub fn RegistrationResponse::from_bytes(
   }
   let evaluated_message = slice_bytes(bytes, 0, noe)
   let server_public_key = slice_bytes(bytes, noe, npk)
-  match validate_group_element(suite, evaluated_message) {
+  match validate_oprf_element(suite, evaluated_message) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
-  match validate_group_element(suite, server_public_key) {
+  match validate_ake_public_key(suite, server_public_key) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
@@ -374,7 +415,7 @@ pub fn RegistrationRecord::from_bytes(
     return Err(InvalidMessageLength)
   }
   let client_public_key = slice_bytes(bytes, 0, npk)
-  match validate_group_element(suite, client_public_key) {
+  match validate_ake_public_key(suite, client_public_key) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
@@ -401,7 +442,7 @@ pub fn RegistrationRecord::new_fake(
   if masking_key.length() != suite_nh(suite) {
     return Err(InvalidMessageLength)
   }
-  match validate_group_element(suite, client_public_key) {
+  match validate_ake_public_key(suite, client_public_key) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
@@ -437,7 +478,7 @@ pub fn CredentialRequest::from_bytes(
   if bytes.length() != suite_noe(suite) {
     return Err(InvalidMessageLength)
   }
-  match validate_group_element(suite, bytes) {
+  match validate_oprf_element(suite, bytes) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
@@ -491,7 +532,7 @@ pub fn CredentialResponse::from_bytes(
     return Err(InvalidMessageLength)
   }
   let evaluated_message = slice_bytes(bytes, 0, noe)
-  match validate_group_element(suite, evaluated_message) {
+  match validate_oprf_element(suite, evaluated_message) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
@@ -552,7 +593,7 @@ pub fn KE1::from_bytes(
   }
   let client_nonce = slice_bytes(bytes, noe, nn_len)
   let client_public_keyshare = slice_bytes(bytes, noe + nn_len, npk)
-  match validate_group_element(suite, client_public_keyshare) {
+  match validate_ake_public_key(suite, client_public_keyshare) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
@@ -619,7 +660,7 @@ pub fn KE2::from_bytes(
   }
   let server_nonce = slice_bytes(bytes, cr_len, nn_len)
   let server_public_keyshare = slice_bytes(bytes, cr_len + nn_len, npk)
-  match validate_group_element(suite, server_public_keyshare) {
+  match validate_ake_public_key(suite, server_public_keyshare) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }

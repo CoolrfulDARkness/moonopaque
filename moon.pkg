@@ -1,6 +1,7 @@
 import {
   "CoolrfulDARkness/moonopaque/hash",
   "CoolrfulDARkness/moonopaque/ristretto255",
+  "CoolrfulDARkness/moonopaque/x25519",
   "CoolrfulDARkness/moonopaque/p256",
   "CoolrfulDARkness/moonopaque/oprf",
 }

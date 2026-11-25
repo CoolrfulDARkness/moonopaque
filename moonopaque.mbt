@@ -4,6 +4,7 @@
 ///
 /// Supported ciphersuites:
 /// - `OPAQUE-Ristretto255-SHA512` (ristretto255, SHA-512, HKDF-SHA512, HMAC-SHA512)
+/// - `OPAQUE-Ristretto255-Curve25519-SHA512` (ristretto255 OPRF, Curve25519 X25519 AKE, SHA-512)
 /// - `OPAQUE-P256-SHA256` (NIST P-256, SHA-256, HKDF-SHA256, HMAC-SHA256)
 
 ///|
@@ -24,6 +25,19 @@ fn slice_bytes(data : Bytes, start : Int32, len : Int32) -> Bytes {
 }
 
 ///|
+fn ct_is_zero_u25519(data : Bytes) -> Bool {
+  if data.length() != 32 {
+    return true
+  }
+  let mut acc = 0
+  for i = 0; i < 31; i = i + 1 {
+    acc = acc | data[i].to_int()
+  }
+  acc = acc | (data[31].to_int() & 127)
+  acc == 0
+}
+
+///|
 fn map_oprf_error(err : @oprf.OprfError) -> OpaqueError {
   match err {
     @oprf.OprfError::InvalidInput => InvalidInput
@@ -37,7 +51,8 @@ fn map_oprf_error(err : @oprf.OprfError) -> OpaqueError {
 ///|
 fn suite_oprf(suite : CipherSuite) -> @oprf.OprfSuite {
   match suite {
-    Ristretto255Sha512 => @oprf.OprfSuite::Ristretto255Sha512
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 =>
+      @oprf.OprfSuite::Ristretto255Sha512
     P256Sha256 => @oprf.OprfSuite::P256Sha256
   }
 }
@@ -45,7 +60,7 @@ fn suite_oprf(suite : CipherSuite) -> @oprf.OprfSuite {
 ///|
 fn suite_nh(suite : CipherSuite) -> Int32 {
   match suite {
-    Ristretto255Sha512 => 64
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 => 64
     P256Sha256 => 32
   }
 }
@@ -53,7 +68,7 @@ fn suite_nh(suite : CipherSuite) -> Int32 {
 ///|
 fn suite_nx(suite : CipherSuite) -> Int32 {
   match suite {
-    Ristretto255Sha512 => 64
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 => 64
     P256Sha256 => 32
   }
 }
@@ -61,7 +76,7 @@ fn suite_nx(suite : CipherSuite) -> Int32 {
 ///|
 fn suite_nm(suite : CipherSuite) -> Int32 {
   match suite {
-    Ristretto255Sha512 => 64
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 => 64
     P256Sha256 => 32
   }
 }
@@ -69,7 +84,7 @@ fn suite_nm(suite : CipherSuite) -> Int32 {
 ///|
 fn suite_noe(suite : CipherSuite) -> Int32 {
   match suite {
-    Ristretto255Sha512 => 32
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 => 32
     P256Sha256 => 33
   }
 }
@@ -77,7 +92,7 @@ fn suite_noe(suite : CipherSuite) -> Int32 {
 ///|
 fn suite_nok(suite : CipherSuite) -> Int32 {
   match suite {
-    Ristretto255Sha512 => 32
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 => 32
     P256Sha256 => 32
   }
 }
@@ -85,7 +100,7 @@ fn suite_nok(suite : CipherSuite) -> Int32 {
 ///|
 fn suite_npk(suite : CipherSuite) -> Int32 {
   match suite {
-    Ristretto255Sha512 => 32
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 => 32
     P256Sha256 => 33
   }
 }
@@ -93,7 +108,7 @@ fn suite_npk(suite : CipherSuite) -> Int32 {
 ///|
 fn suite_nsk(suite : CipherSuite) -> Int32 {
   match suite {
-    Ristretto255Sha512 => 32
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 => 32
     P256Sha256 => 32
   }
 }
@@ -111,7 +126,7 @@ fn suite_masked_response_len(suite : CipherSuite) -> Int32 {
 ///|
 fn suite_hash(suite : CipherSuite, msg : Bytes) -> Bytes {
   match suite {
-    Ristretto255Sha512 => @hash.sha512(msg)
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 => @hash.sha512(msg)
     P256Sha256 => @hash.sha256(msg)
   }
 }
@@ -119,7 +134,8 @@ fn suite_hash(suite : CipherSuite, msg : Bytes) -> Bytes {
 ///|
 fn suite_hmac(suite : CipherSuite, key : Bytes, msg : Bytes) -> Bytes {
   match suite {
-    Ristretto255Sha512 => @hash.hmac_sha512(key, msg)
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 =>
+      @hash.hmac_sha512(key, msg)
     P256Sha256 => @hash.hmac_sha256(key, msg)
   }
 }
@@ -127,7 +143,8 @@ fn suite_hmac(suite : CipherSuite, key : Bytes, msg : Bytes) -> Bytes {
 ///|
 fn suite_hkdf_extract(suite : CipherSuite, salt : Bytes, ikm : Bytes) -> Bytes {
   match suite {
-    Ristretto255Sha512 => @hash.hkdf_extract_sha512(salt, ikm)
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 =>
+      @hash.hkdf_extract_sha512(salt, ikm)
     P256Sha256 => @hash.hkdf_extract_sha256(salt, ikm)
   }
 }
@@ -144,7 +161,8 @@ fn suite_hkdf_expand(
     return Err(KeyDerivationFailed)
   }
   let out = match suite {
-    Ristretto255Sha512 => @hash.hkdf_expand_sha512(prk, info, length)
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 =>
+      @hash.hkdf_expand_sha512(prk, info, length)
     P256Sha256 => @hash.hkdf_expand_sha256(prk, info, length)
   }
   Ok(out)
@@ -181,12 +199,48 @@ fn suite_stretch(
           ),
         )
       }
+    Scrypt(n, r, p) =>
+      match @hash.scrypt_checked(oprf_output, zero_salt, n, r, p, nh) {
+        Some(out) => Ok(out)
+        None => Err(InvalidInput)
+      }
     Custom(stretch_fn) => Ok(stretch_fn(oprf_output))
   }
 }
 
 ///|
-fn validate_group_element(
+/// Validates an OPRF group element (`blinded_message` or `evaluated_message`).
+/// Note: For `Ristretto255Curve25519Sha512`, OPRF uses `ristretto255-SHA512`.
+fn validate_oprf_element(
+  suite : CipherSuite,
+  bytes : Bytes,
+) -> Result[Unit, OpaqueError] {
+  match suite {
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 =>
+      match @ristretto255.Element::from_bytes(bytes) {
+        None => Err(InvalidElement)
+        Some(elem) =>
+          if elem.is_identity() {
+            Err(InvalidElement)
+          } else {
+            Ok(())
+          }
+      }
+    P256Sha256 =>
+      match @p256.Point::from_bytes_compressed(bytes) {
+        None => Err(InvalidElement)
+        Some(pt) => if pt.is_identity() { Err(InvalidElement) } else { Ok(()) }
+      }
+  }
+}
+
+///|
+/// Validates an AKE group public key (`server_public_key`, `client_public_key`,
+/// `client_public_keyshare`, or `server_public_keyshare`).
+/// Note: For `Ristretto255Curve25519Sha512`, AKE uses Curve25519 (X25519) 32-byte
+/// u-coordinates, rejecting the all-zero low-order point here and all 12 small-order
+/// points during Diffie-Hellman via `@x25519.x25519_checked`.
+fn validate_ake_public_key(
   suite : CipherSuite,
   bytes : Bytes,
 ) -> Result[Unit, OpaqueError] {
@@ -200,6 +254,12 @@ fn validate_group_element(
           } else {
             Ok(())
           }
+      }
+    Ristretto255Curve25519Sha512 =>
+      if bytes.length() != 32 || ct_is_zero_u25519(bytes) {
+        Err(InvalidElement)
+      } else {
+        Ok(())
       }
     P256Sha256 =>
       match @p256.Point::from_bytes_compressed(bytes) {
@@ -229,6 +289,11 @@ fn base_mul_public_key(
               Ok(pk.to_bytes())
             }
           }
+      }
+    Ristretto255Curve25519Sha512 =>
+      match @x25519.x25519_base(sk_bytes) {
+        Ok(pk) => if ct_is_zero_u25519(pk) { Err(InvalidKey) } else { Ok(pk) }
+        Err(_) => Err(InvalidKey)
       }
     P256Sha256 =>
       match @p256.Scalar::from_bytes_canonical(sk_bytes) {

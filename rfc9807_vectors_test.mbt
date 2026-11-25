@@ -278,6 +278,72 @@ test "RFC 9807 C.1.2 Real Test Vector 2 (OPAQUE-Ristretto255-SHA512, explicit id
 }
 
 ///|
+test "RFC 9807 C.1.3 Real Test Vector 3 (OPAQUE-Ristretto255-Curve25519-SHA512, default identities)" {
+  run_real_vector(
+    @moonopaque.CipherSuite::Ristretto255Curve25519Sha512,
+    "4f50415155452d504f43",
+    None,
+    None,
+    "a78342ab84d3d30f08d5a9630c79bf311c31ed7f85d9d4959bf492ec67a0eec8a67dfbf4497248eebd49e878aab173e5e4ff76354288fdd53e949a5f7c9f7f1b",
+    "31323334",
+    "436f7272656374486f72736542617474657279537461706c65",
+    "40d6b67fdd7da7c49894750754514dbd2070a407166bd2a5237cca9bf44d6e0b",
+    "38fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d",
+    "c06139381df63bfc91c850db0b9cfbec7a62e86d80040a41aa7725bf0e79d564",
+    "a41e28269b4e97a66468cc00c5a57753e192e152766989770688aa90486ef031",
+    "71cd9960ecef2fe0d0f7494986fa3d8b2bb01963537e60efb13981e138e3d4a1",
+    "da7e07376d6d6f034cfa9bb537d11b8c6b4238c334333d1f0aebb380cae6a6cc",
+    "82850a697b42a505f5b68fcdafce8c31f0af2b581f063cf1091933541936304b",
+    "05a4f54206eef1ba2f615bc0aa285cb22f26d1153b5b40a1e85ff80da12f982f",
+    "c575731ffe1cb0ca5ba63b42c4699767b8b9ab78ba39316ee04baddb2034a70a",
+    "6ecc102d2e7a7cf49617aad7bbe188556792d4acd60a1a8a8d2b65d4b0790308",
+    "0936ea94ab030ec332e29050d266c520e916731a052d05ced7e0cfe751142b48",
+    "40d6b67fdd7da7c49894750754514dbd2070a407166bd2a5237cca9bf44d6e0b20c1e81fef28e92e897ca8287d49a55075b47c3988ff0fff367d79a3e350ccac150b4a3ff48b4770c8e84e437b3d4e68d2b95833f7788f7eb93fa6a8afb85ecb",
+    "26f3dbfd76b8e5f85b4da604f42889a7d4b1bc919f655381a67de02c59fd5436",
+    "506e8f1b89c098fb89b5b6210a05f7898cafdaea221761e8d5272fc39e0f9f08a41e28269b4e97a66468cc00c5a57753e192e152766989770688aa90486ef031",
+    "0936ea94ab030ec332e29050d266c520e916731a052d05ced7e0cfe751142b486d23c6ed818882f9bdfdcf91389fcbc0b7a3faf92bd0bd6be4a1e7730277b694fc7c6ba327fbe786af18487688e0f7c148bbd54dc2fc80c28e7a976d9ef53c3540d6b67fdd7da7c49894750754514dbd2070a407166bd2a5237cca9bf44d6e0b20c1e81fef28e92e897ca8287d49a55075b47c3988ff0fff367d79a3e350ccac150b4a3ff48b4770c8e84e437b3d4e68d2b95833f7788f7eb93fa6a8afb85ecb",
+    "c4dedb0ba6ed5d965d6f250fbe554cd45cba5dfcce3ce836e4aee778aa3cd44dda7e07376d6d6f034cfa9bb537d11b8c6b4238c334333d1f0aebb380cae6a6cc10a83b9117d3798cb2957fbdb0268a0d63dbf9d66bde5c00c78affd80026c911",
+    "9a0e5a1514f62e005ea098b0d8cf6750e358c4389e6add1c52aed9500fa19d0038fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d22cc31127d6f0096755be3c3d2dd6287795c317aeea10c9485bf4f419a786642c19a8f151ceb5e8767d175248c62c017de94057398d28bf0ed00d1b50ee4f812fd9afddf98af8cd58067ca43b0633b6cadd0e9d987f89623fed4d3583bdf6910c425600e90dab3c6b3513188a465461a67f6bbc47aeba808f7f7e2c6d66f5c3271cd9960ecef2fe0d0f7494986fa3d8b2bb01963537e60efb13981e138e3d4a141f55f0bef355cfb34ccd468fdacad75865ee7efef95f4cb6c25d477f720502676f06a3b806da262139bf3fa76a1090b94dac78bc3bc6f8747d5b35acf94eff3ec2ebe7d49b8cf16be64120b279fe92664e47be5da7e60f08f12e91192652f79",
+    "550e923829a544496d8316c490da2b979b78c730dd75be3a17f237a26432c19fbba54b6a0467b1c22ecbd6794bc5fa5b04215ba1ef974c6b090baa42c5bb984f",
+    "9dec51d6d0f6ce7e4345f10961053713b07310cc2e45872f57bbd2fe5070fdf0fb5b77c7ddaa2f3dc5c35132df7417ad7fefe0f690ad266e5a54a21d045c9c38",
+    "fd2fdd07c1bcc88e81c1b1d1de5ad62dfdef1c0b8209ff9d671e1fac55ce9c34d381c1fb2703ff53a797f77daccbe33047ccc167b8105171e10ec962eea203aa",
+  )
+}
+
+///|
+test "RFC 9807 C.1.4 Real Test Vector 4 (OPAQUE-Ristretto255-Curve25519-SHA512, explicit identities)" {
+  run_real_vector(
+    @moonopaque.CipherSuite::Ristretto255Curve25519Sha512,
+    "4f50415155452d504f43",
+    Some("616c696365"),
+    Some("626f62"),
+    "a78342ab84d3d30f08d5a9630c79bf311c31ed7f85d9d4959bf492ec67a0eec8a67dfbf4497248eebd49e878aab173e5e4ff76354288fdd53e949a5f7c9f7f1b",
+    "31323334",
+    "436f7272656374486f72736542617474657279537461706c65",
+    "40d6b67fdd7da7c49894750754514dbd2070a407166bd2a5237cca9bf44d6e0b",
+    "38fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d",
+    "c06139381df63bfc91c850db0b9cfbec7a62e86d80040a41aa7725bf0e79d564",
+    "a41e28269b4e97a66468cc00c5a57753e192e152766989770688aa90486ef031",
+    "71cd9960ecef2fe0d0f7494986fa3d8b2bb01963537e60efb13981e138e3d4a1",
+    "da7e07376d6d6f034cfa9bb537d11b8c6b4238c334333d1f0aebb380cae6a6cc",
+    "82850a697b42a505f5b68fcdafce8c31f0af2b581f063cf1091933541936304b",
+    "05a4f54206eef1ba2f615bc0aa285cb22f26d1153b5b40a1e85ff80da12f982f",
+    "c575731ffe1cb0ca5ba63b42c4699767b8b9ab78ba39316ee04baddb2034a70a",
+    "6ecc102d2e7a7cf49617aad7bbe188556792d4acd60a1a8a8d2b65d4b0790308",
+    "0936ea94ab030ec332e29050d266c520e916731a052d05ced7e0cfe751142b48",
+    "40d6b67fdd7da7c49894750754514dbd2070a407166bd2a5237cca9bf44d6e0bb4c0eab6143959a650c5f6b32acf162b1fbe95bb36c5c4f99df53865c4d3537d69061d80522d772cd0efdbe91f817f6bf7259a56e20b4eb9cbe9443702f4b759",
+    "26f3dbfd76b8e5f85b4da604f42889a7d4b1bc919f655381a67de02c59fd5436",
+    "506e8f1b89c098fb89b5b6210a05f7898cafdaea221761e8d5272fc39e0f9f08a41e28269b4e97a66468cc00c5a57753e192e152766989770688aa90486ef031",
+    "0936ea94ab030ec332e29050d266c520e916731a052d05ced7e0cfe751142b486d23c6ed818882f9bdfdcf91389fcbc0b7a3faf92bd0bd6be4a1e7730277b694fc7c6ba327fbe786af18487688e0f7c148bbd54dc2fc80c28e7a976d9ef53c3540d6b67fdd7da7c49894750754514dbd2070a407166bd2a5237cca9bf44d6e0bb4c0eab6143959a650c5f6b32acf162b1fbe95bb36c5c4f99df53865c4d3537d69061d80522d772cd0efdbe91f817f6bf7259a56e20b4eb9cbe9443702f4b759",
+    "c4dedb0ba6ed5d965d6f250fbe554cd45cba5dfcce3ce836e4aee778aa3cd44dda7e07376d6d6f034cfa9bb537d11b8c6b4238c334333d1f0aebb380cae6a6cc10a83b9117d3798cb2957fbdb0268a0d63dbf9d66bde5c00c78affd80026c911",
+    "9a0e5a1514f62e005ea098b0d8cf6750e358c4389e6add1c52aed9500fa19d0038fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d22cc31127d6f0096755be3c3d2dd6287795c317aeea10c9485bf4f419a786642c19a8f151ceb5e8767d175248c62c017de94057398d28bf0ed00d1b50ee4f812699bff7663be3c5d59de94d8e7e58817c7da005b39c25d25555c929e1c5cf6c1b82837b1367c839aab56a422c0d97719426a79a16f9869cf852100597b23b5a071cd9960ecef2fe0d0f7494986fa3d8b2bb01963537e60efb13981e138e3d4a141f55f0bef355cfb34ccd468fdacad75865ee7efef95f4cb6c25d477f72050267cc22c87edbf3ecaca64cb33bc60dc3bfc551e365f0d46a7fed0e09d96f9afbb48868f5bb3c3e05a86ed8c9476fc22c58306c5a291be34388e09548ba9d70f39",
+    "d16344e791c3f18594d22ba068984fa18ec1e9bead662b75f66826ffd627932fcd1ec40cd01dcf5f63f4055ebe45c7717a57a833aad360256cf1e1c20c0eae1c",
+    "9dec51d6d0f6ce7e4345f10961053713b07310cc2e45872f57bbd2fe5070fdf0fb5b77c7ddaa2f3dc5c35132df7417ad7fefe0f690ad266e5a54a21d045c9c38",
+    "f6116d3aa0e4089a179713bad4d98ed5cb57e5443cae8d36ef78996fa60f3dc6e9fcdd63c001596b06dbc1285d80211035cc0e485506b3f7a650cbf78c5bffc9",
+  )
+}
+
+///|
 test "RFC 9807 C.1.5 Real Test Vector 5 (OPAQUE-P256-SHA256, default identities)" {
   run_real_vector(
     @moonopaque.CipherSuite::P256Sha256,
@@ -441,10 +507,7 @@ fn run_fake_vector(
   let res = @moonopaque.generate_ke3(
     config, client_state, client_id, server_id, unknown_ke2,
   )
-  assert_true(
-    res is Err(@moonopaque.OpaqueError::InvalidEnvelopeTag) ||
-    res is Err(@moonopaque.OpaqueError::InvalidServerMac),
-  )
+  assert_eq(res, Err(@moonopaque.OpaqueError::InvalidEnvelopeTag))
 }
 
 ///|
@@ -465,6 +528,27 @@ test "RFC 9807 C.2.1 Fake Test Vector 1 (OPAQUE-Ristretto255-SHA512)" {
     "39ebd51f0e39a07a1c2d2431995b0399bca9996c5d10014d6ebab4453dc10ce5cef38ed3df6e56bfff40c2d8dd4671c2b4cf63c3d54860f31fe40220d690bb71",
     "b0a26dcaca2230b8f5e4b1bcab9c84b586140221bb8b2848486874b0be44890542d4e61ed3f8d64cdd3b9d153343eca15b9b0d5e388232793c6376bd2d9cfd0ab641d7f20a245a09f1d4dbb6e301661af7f352beb0791d055e48d3645232f77f",
     "928f79ad8df21963e91411b9f55165ba833dea918f441db967cdc09521d229259c035896a043e70f897d87180c543e7a063b83c1bb728fbd189c619e27b6e5a632b5ab1bff96636144faa4f9f9afaac75dd88ea99cf5175902ae3f3b2195693f165f11929ba510a5978e64dcdabecbd7ee1e4380ce270e58fea58e6462d92964a1aaef72698bca1c673baeb04cc2bf7de5f3c2f5553464552d3a0f7698a9ca7f9c5e70c6cb1f706b2f175ab9d04bbd13926e816b6811a50b4aafa9799d5ed7971e10f6eeab2a7a420bf09da9b27a4639645622c46358de9cf7ae813055ae2d1298251c5ba55f6b0b2d58d9ff0c88fe4176484be62a96db6e2a8c4d431bd1bf27fe6c1d0537603835217d42ebf7b2581982732e74892fd28211b31ed33863f0beaf75ba6f59474c0aaf9d78a60a9b2f4cd24d7ab54131b3c8efa192df6b72db4c",
+  )
+}
+
+///|
+test "RFC 9807 C.2.2 Fake Test Vector 2 (OPAQUE-Ristretto255-Curve25519-SHA512)" {
+  run_fake_vector(
+    @moonopaque.CipherSuite::Ristretto255Curve25519Sha512,
+    "4f50415155452d504f43",
+    "616c696365",
+    "626f62",
+    "66e650652a8266b2205f31fdd68adeb739a05b5e650b19e7edc75e734a1296d6088188ca46c31ae8ccbd42a52ed338c06e53645387a7efbc94b6a0449526155e",
+    "31323334",
+    "9c035896a043e70f897d87180c543e7a063b83c1bb728fbd189c619e27b6e5a6",
+    "3c64a3153854cc9f0c23aab3c1a19106ec8bab4730736d1d003880a1d5a59005",
+    "30fbe7e830be1fe8d2187c97414e3826040cbe49b893b64229bab5e85a588846",
+    "78b3040047ff26572a7619617601a61b9c81899bee92f00cfcaa5eed96863555",
+    "1e10f6eeab2a7a420bf09da9b27a4639645622c46358de9cf7ae813055ae2d12",
+    "360b0937f47d45f6123a4d8f0d0c0814b6120d840ebb8bc5b4f6b62df07f78c2",
+    "79ad2621b0757a447dff7108a8ae20a068ce67872095620f415ea611c9dcc04972fa359538cd2fd6528775ca775487b2b56db642049b8a90526b975a38484c6a",
+    "b0a26dcaca2230b8f5e4b1bcab9c84b586140221bb8b2848486874b0be44890542d4e61ed3f8d64cdd3b9d153343eca15b9b0d5e388232793c6376bd2d9cfd0ac059b7ba2aec863933ae48816360c7a9022e83d822704f3b0b86c0502a66e574",
+    "6606b6fedbb33f19a81a1feb5149c600fe77252f58acd3080d7504d3dad4922f9c035896a043e70f897d87180c543e7a063b83c1bb728fbd189c619e27b6e5a67db398c0f65d8c298eac430abdae4c80e82b552fb940c00f0cbcea853c0f96c1c15099f3d4b0e83ecc249613116d605b8d77bb68bdf76994c2bc507e2dcae4176f00afed68ad25cf3040a0e991acece31ca532117f5c12816997372ff031ad04ebcdce06c501da24e7b4db95343456e2ed260895ec362694230a1fa20e24a9c71e10f6eeab2a7a420bf09da9b27a4639645622c46358de9cf7ae813055ae2d122d9055eb8f83e1b497370adad5cc2a417bf9be436a792def0c7b7ccb92b9e275d7c663104ea4655bd70570d975c05351655d55fbfb392286edb55600a23b55ce18f8c60e0d1960c960412dd08eabc81ba7ca8ae2b04aad65462321f51c298010",
   )
 }
 
@@ -603,6 +687,81 @@ test "End-to-end OPAQUE-3DH with PBKDF2 and Argon2id KSF on both ciphersuites" {
       ksf=@moonopaque.Ksf::Custom(x => @hash.sha256(x)),
     ),
   )
+  run_e2e_flow(
+    @moonopaque.Config::ristretto255_curve25519_sha512(context=b"curve25519-id"),
+  )
+}
+
+///|
+test "End-to-end OPAQUE-3DH with RFC 7914 scrypt KSF and RFC 9807 §7 recommended presets" {
+  // E2E registration + login with Ksf::Scrypt(16, 1, 1) and Ksf::Scrypt(1024, 8, 1)
+  run_e2e_flow(
+    @moonopaque.Config::ristretto255_sha512(
+      context=b"scrypt-r255-fast",
+      ksf=@moonopaque.Ksf::Scrypt(16, 1, 1),
+    ),
+  )
+  run_e2e_flow(
+    @moonopaque.Config::p256_sha256(
+      context=b"scrypt-p256-fast",
+      ksf=@moonopaque.Ksf::Scrypt(16, 1, 1),
+    ),
+  )
+  run_e2e_flow(
+    @moonopaque.Config::ristretto255_curve25519_sha512(
+      context=b"scrypt-c25519-fast",
+      ksf=@moonopaque.Ksf::Scrypt(16, 1, 1),
+    ),
+  )
+  run_e2e_flow(
+    @moonopaque.Config::ristretto255_sha512(
+      context=b"scrypt-r255-1024",
+      ksf=@moonopaque.Ksf::Scrypt(1024, 8, 1),
+    ),
+  )
+  run_e2e_flow(
+    @moonopaque.Config::p256_sha256(
+      context=b"scrypt-p256-1024",
+      ksf=@moonopaque.Ksf::Scrypt(1024, 8, 1),
+    ),
+  )
+
+  // Verify RFC 9807 §7 recommended preset constructors
+  let rec1 = @moonopaque.Config::recommended_ristretto255_argon2id(
+    context=b"rfc9807-rec-1",
+  )
+  assert_eq(rec1.suite(), @moonopaque.CipherSuite::Ristretto255Sha512)
+  assert_eq(rec1.context(), b"rfc9807-rec-1")
+  assert_true(rec1.ksf() is @moonopaque.Ksf::Argon2id(1, 2097152, 4))
+
+  let rec2 = @moonopaque.Config::recommended_p256_argon2id(
+    context=b"rfc9807-rec-2",
+  )
+  assert_eq(rec2.suite(), @moonopaque.CipherSuite::P256Sha256)
+  assert_eq(rec2.context(), b"rfc9807-rec-2")
+  assert_true(rec2.ksf() is @moonopaque.Ksf::Argon2id(1, 2097152, 4))
+
+  let rec3 = @moonopaque.Config::recommended_p256_scrypt(
+    context=b"rfc9807-rec-3",
+  )
+  assert_eq(rec3.suite(), @moonopaque.CipherSuite::P256Sha256)
+  assert_eq(rec3.context(), b"rfc9807-rec-3")
+  assert_true(rec3.ksf() is @moonopaque.Ksf::Scrypt(32768, 8, 1))
+
+  // Verify default empty context on recommended_* and ristretto255_curve25519_sha512
+  let rec1_def = @moonopaque.Config::recommended_ristretto255_argon2id()
+  assert_eq(rec1_def.context(), b"")
+  let rec2_def = @moonopaque.Config::recommended_p256_argon2id()
+  assert_eq(rec2_def.context(), b"")
+  let rec3_def = @moonopaque.Config::recommended_p256_scrypt()
+  assert_eq(rec3_def.context(), b"")
+  let c25519_def = @moonopaque.Config::ristretto255_curve25519_sha512()
+  assert_eq(
+    c25519_def.suite(),
+    @moonopaque.CipherSuite::Ristretto255Curve25519Sha512,
+  )
+  assert_eq(c25519_def.context(), b"")
+  assert_true(c25519_def.ksf() is @moonopaque.Ksf::Identity)
 }
 
 ///|

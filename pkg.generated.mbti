@@ -36,6 +36,7 @@ pub fn server_finish(ServerLoginState, KE3) -> Result[Bytes, OpaqueError]
 #derive(Eq, @debug.Debug)
 pub(all) enum CipherSuite {
   Ristretto255Sha512
+  Ristretto255Curve25519Sha512
   P256Sha256
 }
 pub impl Show for CipherSuite
@@ -55,6 +56,10 @@ pub fn Config::context(Self) -> Bytes
 pub fn Config::ksf(Self) -> Ksf
 pub fn Config::new(CipherSuite, Bytes, Ksf) -> Self
 pub fn Config::p256_sha256(context? : Bytes, ksf? : Ksf) -> Self
+pub fn Config::recommended_p256_argon2id(context? : Bytes) -> Self
+pub fn Config::recommended_p256_scrypt(context? : Bytes) -> Self
+pub fn Config::recommended_ristretto255_argon2id(context? : Bytes) -> Self
+pub fn Config::ristretto255_curve25519_sha512(context? : Bytes, ksf? : Ksf) -> Self
 pub fn Config::ristretto255_sha512(context? : Bytes, ksf? : Ksf) -> Self
 pub fn Config::suite(Self) -> CipherSuite
 
@@ -119,6 +124,7 @@ pub(all) enum Ksf {
   Pbkdf2Sha256(Int32)
   Pbkdf2Sha512(Int32)
   Argon2id(Int32, Int32, Int32)
+  Scrypt(Int32, Int32, Int32)
   Custom((Bytes) -> Bytes)
 }
 

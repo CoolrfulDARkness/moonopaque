@@ -98,7 +98,7 @@ pub fn finalize_registration_request(
     return Err(InvalidMessageLength)
   }
   // RFC 9807 §5 & §10.7: client MUST validate the server public key before use.
-  match validate_group_element(config.suite, response.server_public_key) {
+  match validate_ake_public_key(config.suite, response.server_public_key) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }

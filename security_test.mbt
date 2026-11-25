@@ -88,7 +88,7 @@ fn sec_suite_offsets(
 ) -> (Int32, Int32, Int32, Int32) {
   // Returns (noe, npk, cr_len, record_env_offset)
   match suite {
-    Ristretto255Sha512 => (32, 32, 192, 96)
+    Ristretto255Sha512 | Ristretto255Curve25519Sha512 => (32, 32, 192, 96)
     P256Sha256 => (33, 33, 162, 65)
   }
 }
@@ -2197,6 +2197,431 @@ test "security 24: invalid KSF params, empty explicit identity, and short random
         short_rand,
       )
       is Err(@moonopaque.OpaqueError::InvalidInput),
+    )
+  }
+}
+
+///|
+test "security 25: Curve25519 low-order point injection rejected (KE1, KE2, RegistrationRecord, OPRF)" {
+  let suite = @moonopaque.CipherSuite::Ristretto255Curve25519Sha512
+  let config = @moonopaque.Config::ristretto255_curve25519_sha512(
+    context=b"sec-25",
+  )
+  let server_setup = sec_unwrap_ok(
+    @moonopaque.ServerSetup::from_seed(suite, Bytes::make(32, b'\x1a')),
+    "from_seed",
+  )
+  let cred_id = b"c25519-low-order-user"
+  let password = b"CorrectHorseBatteryStaple"
+  let (reg_state, reg_req) = sec_unwrap_ok(
+    @moonopaque.create_registration_request_with_random(
+      config,
+      password,
+      Bytes::make(32, b'\x1b'),
+    ),
+    "reg_req",
+  )
+  let reg_resp = sec_unwrap_ok(
+    @moonopaque.create_registration_response(
+      config, server_setup, reg_req, cred_id,
+    ),
+    "reg_resp",
+  )
+  let (record, _) = sec_unwrap_ok(
+    @moonopaque.finalize_registration_request(
+      config,
+      reg_state,
+      reg_resp,
+      None,
+      None,
+      Bytes::make(32, b'\x1c'),
+    ),
+    "finalize",
+  )
+  let (client_state, ke1) = sec_unwrap_ok(
+    @moonopaque.generate_ke1_with_random(
+      config,
+      password,
+      Bytes::make(32, b'\x1d'),
+    ),
+    "ke1",
+  )
+  let (_, ke2) = sec_unwrap_ok(
+    @moonopaque.generate_ke2(
+      config,
+      server_setup,
+      None,
+      None,
+      record,
+      cred_id,
+      ke1,
+      Bytes::make(32, b'\x1e'),
+      Bytes::make(32, b'\x1f'),
+      Bytes::make(32, b'\x20'),
+    ),
+    "ke2",
+  )
+
+  let valid_reg_resp = reg_resp.to_bytes()
+  let valid_record = record.to_bytes()
+  let valid_ke1 = ke1.to_bytes()
+  let valid_ke2 = ke2.to_bytes()
+
+  // 1. All-zero X25519 points (u = 0 and u = 2^255 -> masked u = 0) rejected at wire decoding
+  let zero_points : Array[Bytes] = [
+    Bytes::make(32, b'\x00'),
+    sec_hex("0000000000000000000000000000000000000000000000000000000000000080"),
+  ]
+  for z in zero_points {
+    assert_eq(
+      @moonopaque.KE1::from_bytes(suite, sec_replace_slice(valid_ke1, 64, z)),
+      Err(@moonopaque.OpaqueError::InvalidElement),
+    )
+    assert_eq(
+      @moonopaque.KE2::from_bytes(suite, sec_replace_slice(valid_ke2, 224, z)),
+      Err(@moonopaque.OpaqueError::InvalidElement),
+    )
+    assert_eq(
+      @moonopaque.RegistrationRecord::from_bytes(
+        suite,
+        sec_replace_slice(valid_record, 0, z),
+      ),
+      Err(@moonopaque.OpaqueError::InvalidElement),
+    )
+    assert_eq(
+      @moonopaque.RegistrationResponse::from_bytes(
+        suite,
+        sec_replace_slice(valid_reg_resp, 32, z),
+      ),
+      Err(@moonopaque.OpaqueError::InvalidElement),
+    )
+  }
+
+  // 2. Non-zero RFC 7748 small-order Curve25519 points rejected during 3DH via x25519_checked
+  let small_order_points : Array[Bytes] = [
+    // u = 1 (order 4)
+    sec_hex("0100000000000000000000000000000000000000000000000000000000000000"),
+    // Order-8 low-order point
+    sec_hex("e0eb7a7c3b41b8ae1656e3faf19fc46ada098deb9c32b1fd866205165f49b800"),
+    // Order-8 low-order point
+    sec_hex("5f9c95bca3508c24b1d0b1559c83ef5b04445cc4581c8e86d8224eddd09f1157"),
+    // p - 1 (order 2)
+    sec_hex("ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f"),
+    // p (reduces to 0)
+    sec_hex("edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f"),
+    // p + 1 (reduces to 1)
+    sec_hex("eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f"),
+  ]
+  for low in small_order_points {
+    // Inject into KE1.client_public_keyshare -> generate_ke2 rejects with InvalidElement
+    let bad_ke1 = sec_unwrap_ok(
+      @moonopaque.KE1::from_bytes(suite, sec_replace_slice(valid_ke1, 64, low)),
+      "KE1::from_bytes(small-order)",
+    )
+    assert_true(
+      @moonopaque.generate_ke2(
+        config,
+        server_setup,
+        None,
+        None,
+        record,
+        cred_id,
+        bad_ke1,
+        Bytes::make(32, b'\x21'),
+        Bytes::make(32, b'\x22'),
+        Bytes::make(32, b'\x23'),
+      )
+      is Err(@moonopaque.OpaqueError::InvalidElement),
+    )
+
+    // Inject into KE2.server_public_keyshare -> generate_ke3 rejects with InvalidElement
+    let bad_ke2 = sec_unwrap_ok(
+      @moonopaque.KE2::from_bytes(suite, sec_replace_slice(valid_ke2, 224, low)),
+      "KE2::from_bytes(small-order)",
+    )
+    assert_eq(
+      @moonopaque.generate_ke3(config, client_state, None, None, bad_ke2),
+      Err(@moonopaque.OpaqueError::InvalidElement),
+    )
+
+    // Inject into RegistrationRecord.client_public_key -> generate_ke2 rejects with InvalidElement
+    let bad_record = sec_unwrap_ok(
+      @moonopaque.RegistrationRecord::from_bytes(
+        suite,
+        sec_replace_slice(valid_record, 0, low),
+      ),
+      "RegistrationRecord::from_bytes(small-order)",
+    )
+    assert_true(
+      @moonopaque.generate_ke2(
+        config,
+        server_setup,
+        None,
+        None,
+        bad_record,
+        cred_id,
+        ke1,
+        Bytes::make(32, b'\x24'),
+        Bytes::make(32, b'\x25'),
+        Bytes::make(32, b'\x26'),
+      )
+      is Err(@moonopaque.OpaqueError::InvalidElement),
+    )
+  }
+
+  // 3. OPRF element fields still enforce strict Ristretto255 canonical decoding
+  let invalid_ristretto = sec_hex(
+    "0100000000000000000000000000000000000000000000000000000000000000",
+  )
+  assert_eq(
+    @moonopaque.RegistrationRequest::from_bytes(suite, invalid_ristretto),
+    Err(@moonopaque.OpaqueError::InvalidElement),
+  )
+  assert_eq(
+    @moonopaque.CredentialRequest::from_bytes(suite, invalid_ristretto),
+    Err(@moonopaque.OpaqueError::InvalidElement),
+  )
+  assert_eq(
+    @moonopaque.RegistrationResponse::from_bytes(
+      suite,
+      sec_replace_slice(valid_reg_resp, 0, invalid_ristretto),
+    ),
+    Err(@moonopaque.OpaqueError::InvalidElement),
+  )
+  assert_eq(
+    @moonopaque.KE1::from_bytes(
+      suite,
+      sec_replace_slice(valid_ke1, 0, invalid_ristretto),
+    ),
+    Err(@moonopaque.OpaqueError::InvalidElement),
+  )
+  assert_eq(
+    @moonopaque.KE2::from_bytes(
+      suite,
+      sec_replace_slice(valid_ke2, 0, invalid_ristretto),
+    ),
+    Err(@moonopaque.OpaqueError::InvalidElement),
+  )
+}
+
+///|
+test "security 26: Curve25519 wrong password, fake KE2 anti-enumeration, KE2/KE3 tampering, and invalid scrypt params" {
+  let suite = @moonopaque.CipherSuite::Ristretto255Curve25519Sha512
+  let config = @moonopaque.Config::ristretto255_curve25519_sha512(
+    context=b"sec-26",
+  )
+  let server_setup = sec_unwrap_ok(
+    @moonopaque.ServerSetup::from_seed(suite, Bytes::make(32, b'\x31')),
+    "from_seed",
+  )
+  let server_id = Some(b"auth.example.com")
+  let cred_id = b"c25519-user@example.com"
+  let password = b"CorrectHorseBatteryStaple"
+  let (record, reg_export_key) = sec_register_user(
+    config,
+    server_setup,
+    password,
+    cred_id,
+    Some(cred_id),
+    server_id,
+    Bytes::make(32, b'\x32'),
+    Bytes::make(32, b'\x33'),
+  )
+
+  // 1. Wrong password -> InvalidEnvelopeTag
+  let (bad_pw_state, bad_pw_ke1) = sec_unwrap_ok(
+    @moonopaque.generate_ke1_with_random(
+      config,
+      b"WrongHorseBatteryStaple",
+      Bytes::make(32, b'\x34'),
+    ),
+    "bad_pw_ke1",
+  )
+  let (_, bad_pw_ke2) = sec_unwrap_ok(
+    @moonopaque.generate_ke2(
+      config,
+      server_setup,
+      server_id,
+      Some(cred_id),
+      record,
+      cred_id,
+      bad_pw_ke1,
+      Bytes::make(32, b'\x35'),
+      Bytes::make(32, b'\x36'),
+      Bytes::make(32, b'\x37'),
+    ),
+    "bad_pw_ke2",
+  )
+  assert_eq(
+    @moonopaque.generate_ke3(
+      config,
+      bad_pw_state,
+      Some(cred_id),
+      server_id,
+      bad_pw_ke2,
+    ),
+    Err(@moonopaque.OpaqueError::InvalidEnvelopeTag),
+  )
+
+  // 2. Honest login + anti-enumeration Fake KE2 (length 320 B matches real KE2)
+  let (client_state, real_ke1) = sec_unwrap_ok(
+    @moonopaque.generate_ke1_with_random(
+      config,
+      password,
+      Bytes::make(32, b'\x38'),
+    ),
+    "real_ke1",
+  )
+  let (server_state, real_ke2) = sec_unwrap_ok(
+    @moonopaque.generate_ke2(
+      config,
+      server_setup,
+      server_id,
+      Some(cred_id),
+      record,
+      cred_id,
+      real_ke1,
+      Bytes::make(32, b'\x39'),
+      Bytes::make(32, b'\x3a'),
+      Bytes::make(32, b'\x3b'),
+    ),
+    "real_ke2",
+  )
+  let ghost_id = b"ghost-c25519@example.com"
+  let (ghost_state, ghost_ke1) = sec_unwrap_ok(
+    @moonopaque.generate_ke1_with_random(
+      config,
+      b"guessed-password",
+      Bytes::make(32, b'\x3c'),
+    ),
+    "ghost_ke1",
+  )
+  let (_, fake_ke2) = sec_unwrap_ok(
+    @moonopaque.generate_ke2_for_unknown_user(
+      config,
+      server_setup,
+      server_id,
+      Some(ghost_id),
+      ghost_id,
+      ghost_ke1,
+      Bytes::make(32, b'\x3d'),
+    ),
+    "fake_ke2",
+  )
+  assert_eq(real_ke2.to_bytes().length(), 320)
+  assert_eq(fake_ke2.to_bytes().length(), 320)
+  assert_eq(
+    @moonopaque.generate_ke3(
+      config,
+      ghost_state,
+      Some(ghost_id),
+      server_id,
+      fake_ke2,
+    ),
+    Err(@moonopaque.OpaqueError::InvalidEnvelopeTag),
+  )
+
+  // 3. 1-bit tampering of KE2 (server_mac, server_nonce, masked_response)
+  let ke2_bytes = real_ke2.to_bytes()
+  for off in [256, 287, 319, 192, 223] {
+    let tampered_ke2 = sec_unwrap_ok(
+      @moonopaque.KE2::from_bytes(suite, sec_flip_bit(ke2_bytes, off, 0x01U)),
+      "KE2::from_bytes(tampered)",
+    )
+    assert_eq(
+      @moonopaque.generate_ke3(
+        config,
+        client_state,
+        Some(cred_id),
+        server_id,
+        tampered_ke2,
+      ),
+      Err(@moonopaque.OpaqueError::InvalidServerMac),
+    )
+  }
+  let tampered_mask_ke2 = sec_unwrap_ok(
+    @moonopaque.KE2::from_bytes(suite, sec_flip_bit(ke2_bytes, 100, 0x01U)),
+    "KE2::from_bytes(tampered mask)",
+  )
+  assert_eq(
+    @moonopaque.generate_ke3(
+      config,
+      client_state,
+      Some(cred_id),
+      server_id,
+      tampered_mask_ke2,
+    ),
+    Err(@moonopaque.OpaqueError::InvalidEnvelopeTag),
+  )
+
+  // 4. Honest KE3 succeeds; 1-bit tampering of KE3 rejected with InvalidClientMac
+  let login_res = sec_unwrap_ok(
+    @moonopaque.generate_ke3(
+      config,
+      client_state,
+      Some(cred_id),
+      server_id,
+      real_ke2,
+    ),
+    "generate_ke3",
+  )
+  assert_eq(login_res.export_key(), reg_export_key)
+  let ke3_bytes = login_res.ke3().to_bytes()
+  assert_eq(ke3_bytes.length(), 64)
+  for off in [0, 31, 63] {
+    let bad_ke3 = sec_unwrap_ok(
+      @moonopaque.KE3::from_bytes(suite, sec_flip_bit(ke3_bytes, off, 0x01U)),
+      "KE3::from_bytes(tampered)",
+    )
+    assert_eq(
+      @moonopaque.server_finish(server_state, bad_ke3),
+      Err(@moonopaque.OpaqueError::InvalidClientMac),
+    )
+  }
+  let server_sk = sec_unwrap_ok(
+    @moonopaque.server_finish(server_state, login_res.ke3()),
+    "server_finish",
+  )
+  assert_eq(server_sk, login_res.session_key())
+
+  // 5. Invalid Ksf::Scrypt parameters rejected with InvalidInput
+  let (reg_state, reg_req) = sec_unwrap_ok(
+    @moonopaque.create_registration_request_with_random(
+      config,
+      password,
+      Bytes::make(32, b'\x41'),
+    ),
+    "scrypt reg_req",
+  )
+  let reg_resp = sec_unwrap_ok(
+    @moonopaque.create_registration_response(
+      config, server_setup, reg_req, b"scrypt-bad-user",
+    ),
+    "scrypt reg_resp",
+  )
+  let bad_scrypt_ksfs : Array[@moonopaque.Ksf] = [
+    @moonopaque.Ksf::Scrypt(0, 1, 1),
+    @moonopaque.Ksf::Scrypt(1, 1, 1),
+    @moonopaque.Ksf::Scrypt(3, 1, 1),
+    @moonopaque.Ksf::Scrypt(-16, 1, 1),
+    @moonopaque.Ksf::Scrypt(16, 0, 1),
+    @moonopaque.Ksf::Scrypt(16, -1, 1),
+    @moonopaque.Ksf::Scrypt(16, 1, 0),
+    @moonopaque.Ksf::Scrypt(16, 1, -2),
+    @moonopaque.Ksf::Scrypt(1073741824, 8, 1),
+  ]
+  for bad_ksf in bad_scrypt_ksfs {
+    let bad_cfg = @moonopaque.Config::new(suite, b"sec-26-scrypt", bad_ksf)
+    assert_eq(
+      @moonopaque.finalize_registration_request(
+        bad_cfg,
+        reg_state,
+        reg_resp,
+        None,
+        None,
+        Bytes::make(32, b'\x42'),
+      ),
+      Err(@moonopaque.OpaqueError::InvalidInput),
     )
   }
 }

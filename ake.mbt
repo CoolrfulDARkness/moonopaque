@@ -8,14 +8,23 @@ pub fn derive_dh_keypair(
   if seed.length() != nseed_len {
     return Err(InvalidInput)
   }
-  match
-    @oprf.derive_key_pair(
-      suite_oprf(suite),
-      seed,
-      b"OPAQUE-DeriveDiffieHellmanKeyPair",
-    ) {
-    Ok(pair) => Ok(pair)
-    Err(e) => Err(map_oprf_error(e))
+  match suite {
+    Ristretto255Curve25519Sha512 =>
+      match @x25519.derive_keypair(seed) {
+        Ok(pair) => Ok(pair)
+        Err(@x25519.X25519Error::InvalidLength) => Err(InvalidInput)
+        Err(@x25519.X25519Error::LowOrderPoint) => Err(KeyDerivationFailed)
+      }
+    Ristretto255Sha512 | P256Sha256 =>
+      match
+        @oprf.derive_key_pair(
+          suite_oprf(suite),
+          seed,
+          b"OPAQUE-DeriveDiffieHellmanKeyPair",
+        ) {
+        Ok(pair) => Ok(pair)
+        Err(e) => Err(map_oprf_error(e))
+      }
   }
 }
 
@@ -41,6 +50,18 @@ fn diffie_hellman(
         return Err(InvalidElement)
       }
       Ok(shared.to_bytes())
+    }
+    Ristretto255Curve25519Sha512 => {
+      if sk_bytes.length() != 32 {
+        return Err(InvalidKey)
+      }
+      if pk_bytes.length() != 32 {
+        return Err(InvalidElement)
+      }
+      match @x25519.x25519_checked(sk_bytes, pk_bytes) {
+        Ok(shared) => Ok(shared)
+        Err(_) => Err(InvalidElement)
+      }
     }
     P256Sha256 => {
       let sk = match @p256.Scalar::from_bytes_canonical(sk_bytes) {
