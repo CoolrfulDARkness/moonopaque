@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "CoolrfulDARkness/moonopaque/p256"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Point {
+  // private fields
+}
+pub fn Point::add(Self, Self) -> Self
+pub fn Point::base_mul(Scalar) -> Self
+pub fn Point::equal(Self, Self) -> Bool
+pub fn Point::from_bytes_compressed(Bytes) -> Self?
+pub fn Point::generator() -> Self
+pub fn Point::hash_to_curve_from_uniform(Bytes) -> Self?
+pub fn Point::identity() -> Self
+pub fn Point::is_identity(Self) -> Bool
+pub fn Point::map_to_curve_sswu(Bytes) -> Self?
+pub fn Point::neg(Self) -> Self
+pub fn Point::scalar_mul(Self, Scalar) -> Self
+pub fn Point::sub(Self, Self) -> Self
+pub fn Point::to_bytes_compressed(Self) -> Bytes
+pub impl Eq for Point
+
+pub struct Scalar {
+  // private fields
+}
+pub fn Scalar::add(Self, Self) -> Self
+pub fn Scalar::equal(Self, Self) -> Bool
+pub fn Scalar::from_bytes_be_mod_n(Bytes) -> Self?
+pub fn Scalar::from_bytes_canonical(Bytes) -> Self?
+pub fn Scalar::invert(Self) -> Self?
+pub fn Scalar::is_zero(Self) -> Bool
+pub fn Scalar::mul(Self, Self) -> Self
+pub fn Scalar::neg(Self) -> Self
+pub fn Scalar::one() -> Self
+pub fn Scalar::sub(Self, Self) -> Self
+pub fn Scalar::to_bytes(Self) -> Bytes
+pub fn Scalar::zero() -> Self
+pub impl Eq for Scalar
+
+// Type aliases
+
+// Traits
