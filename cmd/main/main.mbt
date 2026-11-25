@@ -1,10 +1,12 @@
 ///|
 /// Pure-MoonBit RFC 9807 OPAQUE-3DH Interactive Security Showcase CLI.
 ///
-/// Demonstrates both standard ciphersuites (`OPAQUE-Ristretto255-SHA512` and
-/// `OPAQUE-P256-SHA256`) across six end-to-end security scenarios with zero
-/// external dependencies, zero FFI, and identical behavior on wasm-gc, js,
-/// and native targets.
+/// Demonstrates all three RFC 9807 standard ciphersuites
+/// (`OPAQUE-Ristretto255-SHA512`, `OPAQUE-Ristretto255-Curve25519-SHA512`, and
+/// `OPAQUE-P256-SHA256`) across six end-to-end security scenarios — including
+/// pluggable PBKDF2, Argon2id (RFC 9106), and scrypt (RFC 7914) key stretching
+/// — with zero external dependencies, zero FFI, and identical behavior on
+/// wasm-gc, js, and native targets.
 ///
 /// NOTE: Demo entropy is derived deterministically via SHA-256 labels so the
 /// CLI runs reproducibly without OS RNG hooks. Production deployments MUST
@@ -548,6 +550,12 @@ fn main {
   )
 
   run_suite_showcase(
+    @opaque.CipherSuite::Ristretto255Curve25519Sha512,
+    "OPAQUE-Ristretto255-Curve25519-SHA512 (RFC 9807 + RFC 7748 X25519)",
+    b"suite-curve25519",
+  )
+
+  run_suite_showcase(
     @opaque.CipherSuite::P256Sha256,
     "OPAQUE-P256-SHA256 (RFC 9807 + NIST P-256)",
     b"suite-p256",
@@ -557,32 +565,40 @@ fn main {
   println(
     "====================================================================",
   )
-  println("  [6/6] Pluggable Key Stretching Functions (KSF: PBKDF2 & Argon2id)")
+  println("  [6/6] Pluggable Key Stretching (KSF: PBKDF2, Argon2id & scrypt)")
   println(
     "====================================================================",
   )
   run_ksf_case(
-    "OPAQUE-P256-SHA256 + PBKDF2-HMAC-SHA256 (iterations=1000)",
-    @opaque.Config::p256_sha256(
+    "OPAQUE-Ristretto255-Curve25519-SHA512 + PBKDF2-HMAC-SHA256 (iterations=1000)",
+    @opaque.Config::ristretto255_curve25519_sha512(
       context=b"moonopaque-ksf-demo",
       ksf=@opaque.Ksf::Pbkdf2Sha256(1000),
     ),
     b"ksf-pbkdf2",
   )
   run_ksf_case(
-    "OPAQUE-Ristretto255-SHA512 + Argon2id (t=2, m=64 KiB, p=1)",
+    "OPAQUE-Ristretto255-SHA512 + Argon2id (RFC 9106, t=2, m=64 KiB, p=1)",
     @opaque.Config::ristretto255_sha512(
       context=b"moonopaque-ksf-demo",
       ksf=@opaque.Ksf::Argon2id(2, 64, 1),
     ),
     b"ksf-argon2id",
   )
+  run_ksf_case(
+    "OPAQUE-P256-SHA256 + scrypt (RFC 7914, N=1024, r=8, p=1)",
+    @opaque.Config::p256_sha256(
+      context=b"moonopaque-ksf-demo",
+      ksf=@opaque.Ksf::Scrypt(1024, 8, 1),
+    ),
+    b"ksf-scrypt",
+  )
 
   println("")
   println(
     "====================================================================",
   )
-  println("  ALL 6 SECURITY SCENARIOS PASSED ACROSS BOTH RFC 9807 SUITES!")
+  println("  ALL 6 SECURITY SCENARIOS PASSED ACROSS ALL 3 RFC 9807 SUITES!")
   println(
     "====================================================================",
   )
