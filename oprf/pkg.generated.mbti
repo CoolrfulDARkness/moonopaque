@@ -1,0 +1,61 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "CoolrfulDARkness/moonopaque/oprf"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn blind_evaluate(OprfSuite, Bytes, Bytes) -> Result[Bytes, OprfError]
+
+pub fn blind_from_random_bytes(OprfSuite, Bytes, Bytes) -> Result[(BlindState, Bytes), OprfError]
+
+pub fn blind_with_scalar(OprfSuite, Bytes, Bytes) -> Result[(BlindState, Bytes), OprfError]
+
+pub fn context_string(OprfSuite) -> Bytes
+
+pub fn derive_key_pair(OprfSuite, Bytes, Bytes) -> Result[(Bytes, Bytes), OprfError]
+
+pub fn element_len(OprfSuite) -> Int32
+
+pub fn evaluate(OprfSuite, Bytes, Bytes) -> Result[Bytes, OprfError]
+
+pub fn finalize(BlindState, Bytes, Bytes) -> Result[Bytes, OprfError]
+
+pub fn hash_to_group(OprfSuite, Bytes, Bytes) -> Result[Bytes, OprfError]
+
+pub fn hash_to_scalar(OprfSuite, Bytes, Bytes) -> Result[Bytes, OprfError]
+
+pub fn output_len(OprfSuite) -> Int32
+
+pub fn scalar_len(OprfSuite) -> Int32
+
+// Errors
+
+// Types and methods
+pub struct BlindState {
+  // private fields
+}
+pub fn BlindState::blind_bytes(Self) -> Bytes
+pub fn BlindState::suite(Self) -> OprfSuite
+
+#derive(Eq, @debug.Debug)
+pub(all) enum OprfError {
+  InvalidInput
+  InvalidElement
+  InvalidScalar
+  ZeroScalar
+  DeriveKeyPairFailed
+}
+pub impl Show for OprfError
+
+#derive(Eq, @debug.Debug)
+pub(all) enum OprfSuite {
+  Ristretto255Sha512
+  P256Sha256
+}
+pub impl Show for OprfSuite
+
+// Type aliases
+
+// Traits
