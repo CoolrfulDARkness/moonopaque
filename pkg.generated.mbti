@@ -1,0 +1,192 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "CoolrfulDARkness/moonopaque"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn create_registration_request(Config, Bytes, Bytes) -> Result[(ClientRegistrationState, RegistrationRequest), OpaqueError]
+
+pub fn create_registration_request_with_random(Config, Bytes, Bytes) -> Result[(ClientRegistrationState, RegistrationRequest), OpaqueError]
+
+pub fn create_registration_response(Config, ServerSetup, RegistrationRequest, Bytes) -> Result[RegistrationResponse, OpaqueError]
+
+pub fn derive_dh_keypair(CipherSuite, Bytes) -> Result[(Bytes, Bytes), OpaqueError]
+
+pub fn finalize_registration_request(Config, ClientRegistrationState, RegistrationResponse, Bytes?, Bytes?, Bytes) -> Result[(RegistrationRecord, Bytes), OpaqueError]
+
+pub fn generate_ke1(Config, Bytes, Bytes, Bytes, Bytes) -> Result[(ClientLoginState, KE1), OpaqueError]
+
+pub fn generate_ke1_with_random(Config, Bytes, Bytes) -> Result[(ClientLoginState, KE1), OpaqueError]
+
+pub fn generate_ke2(Config, ServerSetup, Bytes?, Bytes?, RegistrationRecord, Bytes, KE1, Bytes, Bytes, Bytes) -> Result[(ServerLoginState, KE2), OpaqueError]
+
+pub fn generate_ke2_fake(Config, ServerSetup, Bytes?, Bytes?, Bytes, KE1, Bytes, Bytes, Bytes, Bytes, Bytes, Bytes, Bytes) -> Result[(ServerLoginState, KE2), OpaqueError]
+
+pub fn generate_ke2_for_unknown_user(Config, ServerSetup, Bytes?, Bytes?, Bytes, KE1, Bytes) -> Result[(ServerLoginState, KE2), OpaqueError]
+
+pub fn generate_ke3(Config, ClientLoginState, Bytes?, Bytes?, KE2) -> Result[LoginResult, OpaqueError]
+
+pub fn server_finish(ServerLoginState, KE3) -> Result[Bytes, OpaqueError]
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) enum CipherSuite {
+  Ristretto255Sha512
+  P256Sha256
+}
+pub impl Show for CipherSuite
+
+pub struct ClientLoginState {
+  // private fields
+}
+
+pub struct ClientRegistrationState {
+  // private fields
+}
+
+pub struct Config {
+  // private fields
+}
+pub fn Config::context(Self) -> Bytes
+pub fn Config::ksf(Self) -> Ksf
+pub fn Config::new(CipherSuite, Bytes, Ksf) -> Self
+pub fn Config::p256_sha256(context? : Bytes, ksf? : Ksf) -> Self
+pub fn Config::ristretto255_sha512(context? : Bytes, ksf? : Ksf) -> Self
+pub fn Config::suite(Self) -> CipherSuite
+
+#derive(Eq, @debug.Debug)
+pub struct CredentialRequest {
+  // private fields
+}
+pub fn CredentialRequest::blinded_message(Self) -> Bytes
+pub fn CredentialRequest::from_bytes(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn CredentialRequest::to_bytes(Self) -> Bytes
+
+#derive(Eq, @debug.Debug)
+pub struct CredentialResponse {
+  // private fields
+}
+pub fn CredentialResponse::evaluated_message(Self) -> Bytes
+pub fn CredentialResponse::from_bytes(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn CredentialResponse::masked_response(Self) -> Bytes
+pub fn CredentialResponse::masking_nonce(Self) -> Bytes
+pub fn CredentialResponse::to_bytes(Self) -> Bytes
+
+#derive(Eq, @debug.Debug)
+pub struct Envelope {
+  // private fields
+}
+pub fn Envelope::auth_tag(Self) -> Bytes
+pub fn Envelope::from_bytes(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn Envelope::nonce(Self) -> Bytes
+pub fn Envelope::to_bytes(Self) -> Bytes
+
+#derive(Eq, @debug.Debug)
+pub struct KE1 {
+  // private fields
+}
+pub fn KE1::client_nonce(Self) -> Bytes
+pub fn KE1::client_public_keyshare(Self) -> Bytes
+pub fn KE1::credential_request(Self) -> CredentialRequest
+pub fn KE1::from_bytes(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn KE1::to_bytes(Self) -> Bytes
+
+#derive(Eq, @debug.Debug)
+pub struct KE2 {
+  // private fields
+}
+pub fn KE2::credential_response(Self) -> CredentialResponse
+pub fn KE2::from_bytes(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn KE2::server_mac(Self) -> Bytes
+pub fn KE2::server_nonce(Self) -> Bytes
+pub fn KE2::server_public_keyshare(Self) -> Bytes
+pub fn KE2::to_bytes(Self) -> Bytes
+
+#derive(Eq, @debug.Debug)
+pub struct KE3 {
+  // private fields
+}
+pub fn KE3::client_mac(Self) -> Bytes
+pub fn KE3::from_bytes(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn KE3::to_bytes(Self) -> Bytes
+
+pub(all) enum Ksf {
+  Identity
+  Pbkdf2Sha256(Int32)
+  Pbkdf2Sha512(Int32)
+  Argon2id(Int32, Int32, Int32)
+  Custom((Bytes) -> Bytes)
+}
+
+#derive(Eq, @debug.Debug)
+pub struct LoginResult {
+  // private fields
+}
+pub fn LoginResult::export_key(Self) -> Bytes
+pub fn LoginResult::ke3(Self) -> KE3
+pub fn LoginResult::session_key(Self) -> Bytes
+
+#derive(Eq, @debug.Debug)
+pub(all) enum OpaqueError {
+  InvalidInput
+  InvalidKey
+  InvalidElement
+  InvalidMessageLength
+  InvalidEnvelopeTag
+  InvalidServerMac
+  InvalidClientMac
+  OprfError(String)
+  KeyDerivationFailed
+}
+pub impl Show for OpaqueError
+
+#derive(Eq, @debug.Debug)
+pub struct RegistrationRecord {
+  // private fields
+}
+pub fn RegistrationRecord::client_public_key(Self) -> Bytes
+pub fn RegistrationRecord::envelope(Self) -> Envelope
+pub fn RegistrationRecord::from_bytes(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn RegistrationRecord::masking_key(Self) -> Bytes
+pub fn RegistrationRecord::new_fake(CipherSuite, Bytes, Bytes) -> Result[Self, OpaqueError]
+pub fn RegistrationRecord::to_bytes(Self) -> Bytes
+
+#derive(Eq, @debug.Debug)
+pub struct RegistrationRequest {
+  // private fields
+}
+pub fn RegistrationRequest::blinded_message(Self) -> Bytes
+pub fn RegistrationRequest::from_bytes(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn RegistrationRequest::to_bytes(Self) -> Bytes
+
+#derive(Eq, @debug.Debug)
+pub struct RegistrationResponse {
+  // private fields
+}
+pub fn RegistrationResponse::evaluated_message(Self) -> Bytes
+pub fn RegistrationResponse::from_bytes(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn RegistrationResponse::server_public_key(Self) -> Bytes
+pub fn RegistrationResponse::to_bytes(Self) -> Bytes
+
+pub struct ServerLoginState {
+  // private fields
+}
+
+#derive(Eq, @debug.Debug)
+pub struct ServerSetup {
+  // private fields
+}
+pub fn ServerSetup::from_keys(CipherSuite, Bytes, Bytes, Bytes) -> Result[Self, OpaqueError]
+pub fn ServerSetup::from_seed(CipherSuite, Bytes) -> Result[Self, OpaqueError]
+pub fn ServerSetup::oprf_seed(Self) -> Bytes
+pub fn ServerSetup::server_private_key(Self) -> Bytes
+pub fn ServerSetup::server_public_key(Self) -> Bytes
+pub fn ServerSetup::suite(Self) -> CipherSuite
+
+// Type aliases
+
+// Traits
