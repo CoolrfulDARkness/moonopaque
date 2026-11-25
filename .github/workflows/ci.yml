@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Format, Check, Test, CLI & Interface Drift
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (for JS target)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install MoonBit toolchain
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Print toolchain versions
+        run: |
+          moon --version
+          moonc -v
+          node --version
+
+      - name: Check code formatting
+        run: moon fmt --check
+
+      - name: Type-check all targets with zero warnings (-d)
+        run: |
+          moon check -d --target wasm
+          moon check -d --target wasm-gc
+          moon check -d --target js
+          moon check -d --target native
+
+      - name: Run full test suite on Wasm
+        run: moon test -d --target wasm
+
+      - name: Run full test suite on Wasm-GC
+        run: moon test -d --target wasm-gc
+
+      - name: Run full test suite on JS
+        run: moon test -d --target js
+
+      - name: Run full test suite on Native
+        run: moon test -d --target native
+
+      - name: Run CLI showcase across Wasm-GC, JS, and Native
+        run: |
+          moon run cmd/main --target wasm-gc
+          moon run cmd/main --target js
+          moon run cmd/main --target native
+
+      - name: Verify generated .mbti interfaces have zero drift
+        run: |
+          moon info
+          git diff --exit-code -- '*.mbti'
+          test -z "$(git status --porcelain -- '*.mbti')"
