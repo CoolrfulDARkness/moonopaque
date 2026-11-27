@@ -1,5 +1,10 @@
 # moonopaque
 
+> [!IMPORTANT]
+> **项目已架构整合至统一现代隐私认证与门限密码协议栈 [`CoolrfulDARkness/moonvoprf`](https://github.com/CoolrfulDARkness/moonvoprf)（`opaque/` 与 `opaque/js_api/` 子包，commit `7342711`）。**  
+> 本仓库现仅保留作历史归档，不再单独维护或单独参评；合并版本已彻底消除重复的 `ristretto255`、`p256`、`sha2` 与 RFC 9497 `oprf` 实现，直接复用 `moonvoprf/voprf` 与共享恒定时间曲线底座。  
+> **Consolidated into [`CoolrfulDARkness/moonvoprf`](https://github.com/CoolrfulDARkness/moonvoprf):** This repository is archived for historical reference. All RFC 9807 OPAQUE-3DH packages and the interactive Web Demo now live under `moonvoprf/opaque`, directly reusing `moonvoprf/voprf` and the shared constant-time `ristretto255`/`p256`/`sha2`/`kdf` core.
+
 [![CI](https://github.com/CoolrfulDARkness/moonopaque/actions/workflows/ci.yml/badge.svg)](https://github.com/CoolrfulDARkness/moonopaque/actions/workflows/ci.yml)
 [![RFC 9807 Vectors: 9/9 (100%)](https://img.shields.io/badge/RFC%209807%20Vectors-9%2F9%20(100%25)-2EA043.svg)](#rfc-compliance--verification-matrix)
 [![RFC 9807 §7 Profiles: 3/3](https://img.shields.io/badge/RFC%209807%20%C2%A77%20Profiles-3%2F3%20Built--in-0A66C2.svg)](#rfc-compliance--verification-matrix)
